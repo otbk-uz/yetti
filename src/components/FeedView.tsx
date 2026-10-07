@@ -14,10 +14,7 @@ export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCam
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
   const [commentInput, setCommentInput] = useState<string>('');
-  const [commentsMap, setCommentsMap] = useState<Record<string, string[]>>({
-    'post-1': ['Oltin manzara! 🔥', 'Dahshat moment!'],
-    'post-2': ['YETTI Cloudflare D1 app ✨']
-  });
+  const [commentsMap, setCommentsMap] = useState<Record<string, string[]>>({});
 
   const handleAddComment = (postId: string) => {
     if (!commentInput.trim()) return;

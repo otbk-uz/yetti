@@ -67,6 +67,26 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
   }, [capturedMedia]);
 
   // Handle Photo Capture
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const isVideo = file.type.startsWith('video');
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setCapturedMedia({
+          type: isVideo ? 'video' : 'photo',
+          url: reader.result
+        });
+        confetti({ particleCount: 35, spread: 60, origin: { y: 0.8 }, colors: ['#d4af37', '#f5e396'] });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle Photo Capture
   const handleTakeSnapshot = () => {
     if (cameraActive && videoRef.current && canvasRef.current) {
       const video = videoRef.current;
@@ -84,46 +104,31 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
       }
     }
 
-    // Fallback luxury dark gold photo snapshot if camera offline
-    const fallbackPhotos = [
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=800&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80'
-    ];
-    const randomUrl = fallbackPhotos[Math.floor(Math.random() * fallbackPhotos.length)];
-    setCapturedMedia({ type: 'photo', url: randomUrl });
-    confetti({ particleCount: 35, spread: 60, origin: { y: 0.8 }, colors: ['#d4af37', '#f5e396', '#ffffff'] });
+    // If camera unavailable, trigger device file picker for real photo/video upload
+    fileInputRef.current?.click();
   };
 
   // Handle Video Recording
   const handleRecordVideo = () => {
-    if (isRecording) {
-      setIsRecording(false);
-      const fallbackVideos = [
-        'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1188-large.mp4',
-        'https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-1164-large.mp4'
-      ];
-      setCapturedMedia({ type: 'video', url: fallbackVideos[Math.floor(Math.random() * fallbackVideos.length)] });
-      confetti({ particleCount: 45, spread: 70, origin: { y: 0.8 }, colors: ['#d4af37', '#f5e396'] });
+    if (cameraActive) {
+      if (isRecording) {
+        setIsRecording(false);
+      } else {
+        setIsRecording(true);
+        setRecordingTime(0);
+        const interval = setInterval(() => {
+          setRecordingTime(prev => {
+            if (prev >= 5) {
+              clearInterval(interval);
+              setIsRecording(false);
+              return 5;
+            }
+            return prev + 1;
+          });
+        }, 1000);
+      }
     } else {
-      setIsRecording(true);
-      setRecordingTime(0);
-      const interval = setInterval(() => {
-        setRecordingTime(prev => {
-          if (prev >= 5) {
-            clearInterval(interval);
-            setIsRecording(false);
-            const fallbackVideos = [
-              'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1188-large.mp4',
-              'https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-1164-large.mp4'
-            ];
-            setCapturedMedia({ type: 'video', url: fallbackVideos[0] });
-            confetti({ particleCount: 45, spread: 70, origin: { y: 0.8 }, colors: ['#d4af37', '#f5e396'] });
-            return 5;
-          }
-          return prev + 1;
-        });
-      }, 1000);
+      fileInputRef.current?.click();
     }
   };
 
@@ -164,6 +169,13 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', background: '#050507', overflow: 'hidden' }}>
       <canvas ref={canvasRef} style={{ display: 'none' }} />
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileSelect}
+        accept="image/*,video/*"
+        style={{ display: 'none' }}
+      />
 
       {/* Captured Preview Mode vs Live Camera Mode */}
       {capturedMedia ? (

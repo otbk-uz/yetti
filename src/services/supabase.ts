@@ -91,9 +91,84 @@ export class SupabaseService {
     return { success: true, mediaUrl: post.mediaUrl };
   }
 
-  // 3. Register user profile into Supabase yetti_users table
+  // 3. Check if nickname or phone number is already registered
+  static async checkUserExists(nickname: string, phone: string, currentNick?: string): Promise<{ nicknameTaken: boolean; phoneTaken: boolean }> {
+    const cleanNick = nickname.replace(/^@/, '').toLowerCase().trim();
+    const cleanPhone = phone.replace(/\D/g, '').trim();
+
+    let nicknameTaken = false;
+    let phoneTaken = false;
+
+    // Check local storage registered users registry
+    let localUsers: UserProfile[] = [];
+    const stored = localStorage.getItem('yetti_registered_users_db');
+    if (stored) {
+      try {
+        localUsers = JSON.parse(stored);
+      } catch (e) {}
+    }
+
+    const currentCleanNick = (currentNick || '').replace(/^@/, '').toLowerCase().trim();
+
+    for (const u of localUsers) {
+      const uNick = (u.nickname || '').replace(/^@/, '').toLowerCase().trim();
+      const uPhone = (u.phone || '').replace(/\D/g, '').trim();
+
+      // If editing existing profile, skip matching self
+      if (currentCleanNick && uNick === currentCleanNick) {
+        continue;
+      }
+
+      if (uNick === cleanNick && cleanNick !== '') {
+        nicknameTaken = true;
+      }
+      if (uPhone === cleanPhone && cleanPhone.length > 5) {
+        phoneTaken = true;
+      }
+    }
+
+    // Check remote Supabase yetti_users table
+    try {
+      const { data } = await supabase.from('yetti_users').select('nickname, phone');
+      if (data) {
+        for (const u of data) {
+          const uNick = (u.nickname || '').replace(/^@/, '').toLowerCase().trim();
+          const uPhone = (u.phone || '').replace(/\D/g, '').trim();
+
+          if (currentCleanNick && uNick === currentCleanNick) {
+            continue;
+          }
+
+          if (uNick === cleanNick && cleanNick !== '') {
+            nicknameTaken = true;
+          }
+          if (uPhone === cleanPhone && cleanPhone.length > 5) {
+            phoneTaken = true;
+          }
+        }
+      }
+    } catch (e) {}
+
+    return { nicknameTaken, phoneTaken };
+  }
+
+  // 4. Register user profile into Supabase yetti_users table and local registry
   static async registerUser(user: UserProfile): Promise<boolean> {
     try {
+      // Maintain local registered users registry
+      let localUsers: UserProfile[] = [];
+      const stored = localStorage.getItem('yetti_registered_users_db');
+      if (stored) {
+        try {
+          localUsers = JSON.parse(stored);
+        } catch (e) {}
+      }
+
+      const cleanNick = user.nickname.replace(/^@/, '').toLowerCase().trim();
+      const filtered = localUsers.filter(u => (u.nickname || '').replace(/^@/, '').toLowerCase().trim() !== cleanNick);
+      filtered.push(user);
+      localStorage.setItem('yetti_registered_users_db', JSON.stringify(filtered));
+
       const { error } = await supabase
         .from('yetti_users')
         .upsert({

@@ -13,24 +13,50 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
   const [phone, setPhone] = useState(currentUser?.phone || '+998 ');
   const [nickname, setNickname] = useState(currentUser?.nickname || '');
   const [name, setName] = useState(currentUser?.name || '');
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
     if (!phone.trim() || !nickname.trim() || !name.trim()) return;
+
+    const cleanNick = nickname.replace(/^@/, '').toLowerCase().trim();
+    const cleanPhone = phone.trim();
 
     setIsSyncing(true);
 
+    // Verify unique nickname and phone number against database & local registry
+    const { nicknameTaken, phoneTaken } = await SupabaseService.checkUserExists(
+      cleanNick,
+      cleanPhone,
+      currentUser?.nickname
+    );
+
+    if (nicknameTaken) {
+      setIsSyncing(false);
+      setErrorMessage(`⚠️ @${cleanNick} nikneymi allaqachon band! Boshqa nikneym tanlang.`);
+      return;
+    }
+
+    if (phoneTaken) {
+      setIsSyncing(false);
+      setErrorMessage(`⚠️ ${cleanPhone} telefon raqami allaqachon ro'yxatdan o'tgan! Boshqa raqam kiring.`);
+      return;
+    }
+
+    const defaultAvatar = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%230d0c12" stroke="%23d4af37" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+
     const user: UserProfile = {
-      phone,
-      nickname: nickname.replace('@', ''),
+      phone: cleanPhone,
+      nickname: cleanNick,
       name,
-      avatar: currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+      avatar: currentUser?.avatar && !currentUser.avatar.includes('unsplash') ? currentUser.avatar : defaultAvatar,
       isLoggedIn: true,
       isRegistered: true
     };
 
-    // Register user profile to Supabase Database
+    // Register user profile to Supabase Database & local registry
     await SupabaseService.registerUser(user);
 
     setIsSyncing(false);
@@ -136,7 +162,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
               type="text"
               placeholder="Nikname (masalan: aziz_yetti)"
               value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
+              onChange={(e) => {
+                setNickname(e.target.value);
+                setErrorMessage('');
+              }}
               required
               style={{
                 width: '100%',
@@ -151,6 +180,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
             />
           </div>
         </div>
+
+        {errorMessage && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            color: '#fca5a5',
+            padding: '10px 14px',
+            borderRadius: '14px',
+            fontSize: '0.82rem',
+            textAlign: 'center',
+            fontWeight: 700,
+            lineHeight: 1.4
+          }}>
+            {errorMessage}
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
