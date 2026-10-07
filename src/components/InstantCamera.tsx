@@ -35,8 +35,7 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
   // Filter CSS mapping
   const filterStyles: Record<string, string> = {
     oddiy: 'none',
-    noir: 'grayscale(1) contrast(1.35)',
-    cyber: 'contrast(1.2) hue-rotate(180deg) saturate(1.4)'
+    noir: 'grayscale(1) contrast(1.35)'
   };
 
   useEffect(() => {
@@ -358,8 +357,7 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
           }}>
             {[
               { id: 'oddiy', label: 'Oddiy' },
-              { id: 'noir', label: 'Noir 🖤' },
-              { id: 'cyber', label: 'Cyber ⚡' }
+              { id: 'noir', label: 'Noir 🖤' }
             ].map(f => (
               <button
                 key={f.id}
