@@ -154,7 +154,7 @@ export const App: React.FC = () => {
     SupabaseService.updatePostCaption(postId, newCaption);
   };
 
-  const handleSaveUser = (updatedUser: UserProfileType) => {
+  const handleSaveUser = (updatedUser: UserProfileType, isNewRegistration?: boolean) => {
     const cleanedUser = {
       ...updatedUser,
       nickname: normalizeNick(updatedUser.nickname)
@@ -162,7 +162,9 @@ export const App: React.FC = () => {
     setUser(cleanedUser);
     localStorage.setItem('yetti_user', JSON.stringify(cleanedUser));
     setShowAuthModal(false);
-    setShowOnboarding(true); // Open onboarding tutorial right after registration!
+    if (isNewRegistration) {
+      setShowOnboarding(true); // Open onboarding tutorial for new registrations!
+    }
   };
 
   // Filter posts belonging to current user safely ignoring '@' and case

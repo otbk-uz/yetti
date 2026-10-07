@@ -221,4 +221,50 @@ export class SupabaseService {
       return true;
     }
   }
+
+  // 8. Find user by phone & password to log in
+  static async loginUser(phone: string, password?: string): Promise<{ success: boolean; user?: UserProfile; message?: string }> {
+    const cleanPhone = phone.replace(/\D/g, '').trim();
+
+    // Check local storage registered users registry first
+    let localUsers: UserProfile[] = [];
+    const stored = localStorage.getItem('yetti_registered_users_db');
+    if (stored) {
+      try {
+        localUsers = JSON.parse(stored);
+      } catch (e) {}
+    }
+
+    const foundLocal = localUsers.find(u => (u.phone || '').replace(/\D/g, '').trim() === cleanPhone);
+    if (foundLocal) {
+      if (password && foundLocal.password && foundLocal.password !== password) {
+        return { success: false, message: "⚠️ Parol noto'g'ri kiritildi!" };
+      }
+      return { success: true, user: foundLocal };
+    }
+
+    // Check remote Supabase yetti_users table
+    try {
+      const { data } = await supabase
+        .from('yetti_users')
+        .select('*');
+
+      if (data) {
+        const foundRemote = data.find(u => (u.phone || '').replace(/\D/g, '').trim() === cleanPhone);
+        if (foundRemote) {
+          const userObj: UserProfile = {
+            name: foundRemote.name,
+            nickname: foundRemote.nickname,
+            phone: foundRemote.phone,
+            avatar: foundRemote.avatar,
+            isLoggedIn: true,
+            isRegistered: true
+          };
+          return { success: true, user: userObj };
+        }
+      }
+    } catch (e) {}
+
+    return { success: false, message: "⚠️ Ushbu telefon raqam ro'yxatdan o'tmagan! 'Ro'yxatdan o'tish' oynasiga o'ting." };
+  }
 }
