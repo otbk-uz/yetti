@@ -13,7 +13,7 @@ export class CloudflareService {
         headers: { 'Content-Type': 'application/json' }
       });
       if (response.ok) {
-        const data = await response.json();
+        const data = (await response.json()) as { posts: MediaPost[] };
         return data.posts;
       }
     } catch (e) {
@@ -37,8 +37,8 @@ export class CloudflareService {
       });
 
       if (r2Response.ok) {
-        const { mediaUrl } = await r2Response.json();
-        post.mediaUrl = mediaUrl;
+        const data = (await r2Response.json()) as { mediaUrl: string };
+        post.mediaUrl = data.mediaUrl;
       }
 
       // 2. Insert record into Cloudflare D1 Database
