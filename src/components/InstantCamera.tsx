@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, Send, X } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { Camera, Send, X, Upload } from 'lucide-react';
 import { SupabaseService } from '../services/supabase';
 import type { MediaPost } from '../types';
 
@@ -21,6 +20,7 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [mode, setMode] = useState<'photo' | 'video'>('photo');
   const [cameraActive, setCameraActive] = useState<boolean>(false);
@@ -29,12 +29,13 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
   const [caption, setCaption] = useState<string>('');
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordingTime, setRecordingTime] = useState<number>(0);
-  const [isSyncingCloudflare, setIsSyncingCloudflare] = useState<boolean>(false);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
-  // Filters mapping
+  // Filter CSS mapping
   const filterStyles: Record<string, string> = {
     oddiy: 'none',
-    noir: 'grayscale(1) contrast(1.35)'
+    noir: 'grayscale(1) contrast(1.35)',
+    cyber: 'contrast(1.2) hue-rotate(180deg) saturate(1.4)'
   };
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
           setCameraActive(true);
         }
       } catch (err) {
-        console.log('Camera API fallback mode:', err);
+        console.log('Camera inactive or desktop mode:', err);
         setCameraActive(false);
       }
     }
@@ -66,9 +67,6 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
     };
   }, [capturedMedia]);
 
-  // Handle Photo Capture
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -80,13 +78,12 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
           type: isVideo ? 'video' : 'photo',
           url: reader.result
         });
-        confetti({ particleCount: 35, spread: 60, origin: { y: 0.8 }, colors: ['#d4af37', '#f5e396'] });
       }
     };
     reader.readAsDataURL(file);
   };
 
-  // Handle Photo Capture
+  // Handle Photo Snapshot
   const handleTakeSnapshot = () => {
     if (cameraActive && videoRef.current && canvasRef.current) {
       const video = videoRef.current;
@@ -97,14 +94,13 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
       if (ctx) {
         ctx.filter = filterStyles[selectedFilter];
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
         setCapturedMedia({ type: 'photo', url: dataUrl });
-        confetti({ particleCount: 35, spread: 60, origin: { y: 0.8 }, colors: ['#d4af37', '#f5e396', '#ffffff'] });
         return;
       }
     }
 
-    // If camera unavailable, trigger device file picker for real photo/video upload
+    // Trigger device file upload if camera offline
     fileInputRef.current?.click();
   };
 
@@ -132,11 +128,11 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
     }
   };
 
-  // Publish post to Cloudflare R2 + D1 Database
+  // Publish post to Database & Feed
   const handlePublish = async () => {
     if (!capturedMedia) return;
 
-    setIsSyncingCloudflare(true);
+    setIsSyncing(true);
 
     const newPost: MediaPost = {
       id: `post-${Date.now()}`,
@@ -149,17 +145,16 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
       likes: 1,
       commentsCount: 0,
       shares: 0,
-      caption: caption || 'YETTI Gold Momental ⚡',
+      caption: caption.trim() || 'Momental lahza ⚡',
       filter: selectedFilter
     };
 
-    // Supabase DB & Storage upload
     const uploadRes = await SupabaseService.uploadInstantPost(newPost);
     if (uploadRes.mediaUrl) {
       newPost.mediaUrl = uploadRes.mediaUrl;
     }
 
-    setIsSyncingCloudflare(false);
+    setIsSyncing(false);
     onPublishPost(newPost);
     setCapturedMedia(null);
     setCaption('');
@@ -167,7 +162,7 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', background: '#050507', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', background: '#07080a', overflow: 'hidden' }}>
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       <input
         type="file"
@@ -177,14 +172,13 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
         style={{ display: 'none' }}
       />
 
-      {/* Captured Preview Mode vs Live Camera Mode */}
+      {/* Preview captured media vs camera viewfinder */}
       {capturedMedia ? (
         <div className="fade-in" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-          {/* Media preview */}
           {capturedMedia.type === 'photo' ? (
             <img
               src={capturedMedia.url}
-              alt="Momental Capture"
+              alt="Preview"
               style={{
                 width: '100%',
                 height: '100%',
@@ -208,76 +202,78 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
             />
           )}
 
-          {/* Overlay controls for caption and Instant Publish */}
+          {/* Close preview button */}
           <div style={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            padding: '1.25rem',
-            background: 'linear-gradient(to bottom, rgba(5,5,7,0.95), transparent)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            top: 72,
+            left: '1.25rem',
+            zIndex: 10
           }}>
             <button
               onClick={() => setCapturedMedia(null)}
-              style={{ background: 'rgba(212,175,55,0.2)', border: '1px solid rgba(212,175,55,0.4)', color: '#fff', borderRadius: '50%', padding: '10px', cursor: 'pointer' }}
+              style={{
+                background: 'rgba(7,8,10,0.7)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                color: '#fff',
+                borderRadius: '50%',
+                padding: '10px',
+                cursor: 'pointer'
+              }}
             >
-              <X size={20} color="#f5e396" />
+              <X size={20} />
             </button>
           </div>
 
+          {/* Bottom caption input & publish button */}
           <div style={{
             position: 'absolute',
             bottom: 85,
             left: 0,
             right: 0,
             padding: '1.25rem',
-            background: 'linear-gradient(to top, rgba(5,5,7,0.98), transparent)',
+            background: 'linear-gradient(to top, rgba(7,8,10,0.98), transparent)',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.75rem'
           }}>
             <input
               type="text"
-              placeholder="Izoh qoldiring... #yetti #gold"
+              placeholder="Izoh qoldiring..."
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               style={{
                 width: '100%',
-                background: 'rgba(20,18,25,0.85)',
-                border: '1px solid rgba(212,175,55,0.35)',
+                background: 'rgba(18,20,26,0.85)',
+                border: '1px solid rgba(255,255,255,0.15)',
                 color: '#fff',
                 borderRadius: '14px',
                 padding: '12px 16px',
                 fontSize: '0.9rem',
-                outline: 'none',
-                boxShadow: '0 0 15px rgba(212,175,55,0.1)'
+                outline: 'none'
               }}
             />
 
             <button
               onClick={handlePublish}
-              disabled={isSyncingCloudflare}
+              disabled={isSyncing}
               style={{
                 width: '100%',
-                background: 'var(--gold-gradient)',
+                background: '#ffffff',
                 border: 'none',
-                color: '#000',
-                fontWeight: 900,
-                fontSize: '1rem',
+                color: '#000000',
+                fontWeight: 800,
+                fontSize: '0.95rem',
                 padding: '14px',
                 borderRadius: '14px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 25px rgba(212,175,55,0.4)'
+                gap: '8px'
               }}
             >
-              <Send size={18} /> {isSyncingCloudflare ? 'Cloudflare ga Yuklanmoqda...' : 'Tavsiyalarga Yuklash (Publish)'}
+              <Send size={18} /> {isSyncing ? 'Sinxronlanmoqda...' : 'Tavsiyalarga Joylash'}
             </button>
           </div>
         </div>
@@ -305,34 +301,51 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'radial-gradient(circle, #181520 0%, #050507 100%)',
+              background: '#07080a',
               color: '#fff',
               textAlign: 'center',
               padding: '2rem'
             }}>
               <div style={{
-                padding: '18px',
-                borderRadius: '50%',
-                background: 'rgba(212,175,55,0.15)',
-                border: '1px solid rgba(212,175,55,0.3)',
-                marginBottom: '1rem',
-                boxShadow: '0 0 30px rgba(212,175,55,0.3)'
+                padding: '20px',
+                borderRadius: '24px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                marginBottom: '1.25rem'
               }}>
-                <Camera size={48} color="#f5e396" />
+                <Camera size={44} color="#ffffff" />
               </div>
-              <h3 className="text-gold-metallic" style={{ fontSize: '1.4rem', marginBottom: '0.4rem' }}>
-                YETTI GOLD MOMENTAL
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', marginBottom: '0.4rem' }}>
+                INSTANT KAMERA
               </h3>
-              <p style={{ fontSize: '0.82rem', color: '#a1a1aa', maxWidth: '280px' }}>
-                Obsidian & Dark Gold formatida rasm va videolaringiz darhol Tavsiyalarga chiqadi.
+              <p style={{ fontSize: '0.82rem', color: '#94a3b8', maxWidth: '280px', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+                Webcam kameralari faol bo'lmaganda qurilmangizdan rasm yoki video tanlang.
               </p>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: '#fff',
+                  padding: '10px 20px',
+                  borderRadius: '999px',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <Upload size={16} /> Fayl Tanlash
+              </button>
             </div>
           )}
 
           {/* Top Filter Chips */}
           <div style={{
             position: 'absolute',
-            top: 72,
+            top: 76,
             left: 0,
             right: 0,
             display: 'flex',
@@ -343,7 +356,8 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
           }}>
             {[
               { id: 'oddiy', label: 'Oddiy' },
-              { id: 'noir', label: 'Noir 🖤' }
+              { id: 'noir', label: 'Noir 🖤' },
+              { id: 'cyber', label: 'Cyber ⚡' }
             ].map(f => (
               <button
                 key={f.id}
@@ -370,22 +384,22 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
             {/* Mode Switcher */}
             <div style={{
               display: 'flex',
-              gap: '1rem',
-              background: 'rgba(10,9,14,0.75)',
-              backdropFilter: 'blur(12px)',
-              padding: '4px 12px',
+              gap: '0.5rem',
+              background: 'rgba(15,17,23,0.85)',
+              backdropFilter: 'blur(16px)',
+              padding: '4px',
               borderRadius: '999px',
-              border: '1px solid rgba(212,175,55,0.3)'
+              border: '1px solid rgba(255,255,255,0.12)'
             }}>
               <button
                 onClick={() => setMode('photo')}
                 style={{
-                  background: mode === 'photo' ? 'var(--gold-gradient)' : 'none',
-                  color: mode === 'photo' ? '#000' : '#fff',
+                  background: mode === 'photo' ? '#ffffff' : 'transparent',
+                  color: mode === 'photo' ? '#000000' : '#ffffff',
                   border: 'none',
-                  padding: '4px 14px',
+                  padding: '5px 16px',
                   borderRadius: '999px',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   fontSize: '0.78rem',
                   cursor: 'pointer'
                 }}
@@ -395,12 +409,12 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
               <button
                 onClick={() => setMode('video')}
                 style={{
-                  background: mode === 'video' ? '#ff0055' : 'none',
-                  color: '#fff',
+                  background: mode === 'video' ? '#ef4444' : 'transparent',
+                  color: '#ffffff',
                   border: 'none',
-                  padding: '4px 14px',
+                  padding: '5px 16px',
                   borderRadius: '999px',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   fontSize: '0.78rem',
                   cursor: 'pointer'
                 }}
@@ -421,7 +435,7 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
             )}
 
             {isRecording && (
-              <span style={{ color: '#ff0055', fontWeight: 800, fontSize: '0.9rem' }}>
+              <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '0.85rem' }}>
                 🔴 Yozib olinmoqda: 00:0{recordingTime}s
               </span>
             )}

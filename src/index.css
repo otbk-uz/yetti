@@ -1,26 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-main: #050507;
-  --bg-card: rgba(18, 17, 23, 0.88);
-  --bg-glass: rgba(212, 175, 55, 0.06);
+  --bg-main: #07080a;
+  --bg-card: rgba(18, 20, 26, 0.75);
+  --bg-glass: rgba(255, 255, 255, 0.04);
 
-  --gold-primary: #d4af37;
-  --gold-light: #f5e396;
-  --gold-dark: #aa771c;
-  --gold-glow: rgba(212, 175, 55, 0.4);
+  --accent-cyan: #38bdf8;
+  --accent-blue: #0284c7;
+  --accent-glow: rgba(56, 189, 248, 0.25);
 
-  --gold-gradient: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
-  --gold-gradient-soft: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(170, 119, 28, 0.15));
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(56, 189, 248, 0.4);
 
   --text-main: #f8fafc;
-  --text-gold: #f3e5ab;
-  --text-muted: #a1a1aa;
-  --text-dim: #71717a;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
 
   --font-main: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  --font-brand: 'Cinzel', serif;
-  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'Inter', monospace;
 }
 
 * {
@@ -40,37 +37,29 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Gold Scrollbar */
+/* Custom Minimalist Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--gold-dark);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 999px;
 }
 
-/* Gold Metallic Text Utility */
-.text-gold-metallic {
-  background: var(--gold-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 800;
-}
-
-/* App Outer Shell (Mobile First Mobile Frame on Desktop) */
+/* App Outer Shell - Clean Glass Frame */
 .yetti-app {
   width: 100%;
   max-width: 480px;
   height: 100vh;
   margin: 0 auto;
   position: relative;
-  background: #050507;
+  background: var(--bg-main);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 0 60px rgba(212, 175, 55, 0.15);
-  border-left: 1px solid rgba(212, 175, 55, 0.2);
-  border-right: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.9);
+  border-left: 1px solid var(--border-glass);
+  border-right: 1px solid var(--border-glass);
 }
 
 @media (max-width: 500px) {
@@ -92,54 +81,30 @@ html, body, #root {
   align-items: center;
   justify-content: space-between;
   padding: 0 1.25rem;
-  background: linear-gradient(to bottom, rgba(5, 5, 7, 0.95), transparent);
-  backdrop-filter: blur(12px);
+  background: rgba(7, 8, 10, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-glass);
 }
 
 .yetti-logo {
-  font-family: var(--font-brand);
   font-weight: 800;
-  font-size: 1.5rem;
-  letter-spacing: 1px;
+  font-size: 1.35rem;
+  letter-spacing: 2px;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
+  color: #fff;
   cursor: pointer;
 }
 
-.yetti-badge {
-  background: var(--gold-gradient);
-  color: #000;
-  font-family: var(--font-display);
-  font-size: 0.62rem;
-  font-weight: 900;
-  padding: 2px 8px;
-  border-radius: 999px;
-  text-transform: uppercase;
-  box-shadow: 0 0 12px var(--gold-glow);
-}
-
-/* Cloudflare Sync Badge */
-.cloudflare-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: rgba(212, 175, 55, 0.12);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  color: var(--gold-light);
-  font-weight: 600;
-}
-
-/* Luxury Metallic Shutter Ring Button */
+/* Minimalist Shutter Button */
 .shutter-btn {
-  width: 80px;
-  height: 80px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
-  border: 3px solid var(--gold-primary);
-  background: rgba(5, 5, 7, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  background: rgba(7, 8, 10, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -147,42 +112,42 @@ html, body, #root {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   outline: none;
-  box-shadow: 0 0 25px var(--gold-glow), inset 0 0 15px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
 .shutter-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 35px var(--gold-glow);
+  transform: scale(1.04);
+  border-color: #fff;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.25);
 }
 
 .shutter-btn:active {
-  transform: scale(0.92);
+  transform: scale(0.93);
 }
 
 .shutter-inner {
-  width: 62px;
-  height: 62px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
-  background: var(--gold-gradient);
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+  background: #ffffff;
   transition: all 0.2s ease;
 }
 
 .shutter-btn.recording .shutter-inner {
-  background: #ff0055;
+  background: #ef4444;
   border-radius: 12px;
-  width: 34px;
-  height: 34px;
-  box-shadow: 0 0 20px rgba(255, 0, 85, 0.8);
-  animation: pulseRecordingGold 1s infinite alternate;
+  width: 32px;
+  height: 32px;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+  animation: pulseRecording 1s infinite alternate;
 }
 
-@keyframes pulseRecordingGold {
+@keyframes pulseRecording {
   0% { transform: scale(1); }
   100% { transform: scale(1.15); }
 }
 
-/* Floating Bottom Metallic Tab Bar */
+/* Floating Bottom Glass Tab Bar */
 .yetti-tabbar {
   position: absolute;
   bottom: 14px;
@@ -190,18 +155,18 @@ html, body, #root {
   transform: translateX(-50%);
   width: 92%;
   max-width: 420px;
-  height: 64px;
-  background: rgba(14, 13, 18, 0.9);
+  height: 62px;
+  background: rgba(15, 17, 23, 0.85);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(212, 175, 55, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 999px;
   z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-around;
   padding: 0 0.5rem;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
 }
 
 .tab-item {
@@ -210,7 +175,7 @@ html, body, #root {
   align-items: center;
   gap: 3px;
   color: var(--text-dim);
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -220,7 +185,7 @@ html, body, #root {
 }
 
 .tab-item.active {
-  color: var(--gold-light);
+  color: #ffffff;
 }
 
 .tab-icon-wrapper {
@@ -230,20 +195,19 @@ html, body, #root {
 }
 
 .tab-item.active .tab-icon-wrapper {
-  background: rgba(212, 175, 55, 0.2);
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
 }
 
 /* Filter Chips overlay */
 .filter-chip {
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(15, 15, 20, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  color: var(--text-gold);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
@@ -252,16 +216,15 @@ html, body, #root {
 }
 
 .filter-chip.active {
-  background: var(--gold-gradient);
+  background: #ffffff;
   color: #000000;
-  border-color: transparent;
-  box-shadow: 0 0 15px var(--gold-glow);
-  font-weight: 800;
+  border-color: #ffffff;
+  font-weight: 700;
 }
 
 /* Fade in animation */
 .fade-in {
-  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeIn {

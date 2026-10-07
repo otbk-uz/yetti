@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, User, AtSign, Zap, CheckCircle } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { Phone, User, AtSign, Zap, ArrowRight } from 'lucide-react';
 import { SupabaseService } from '../services/supabase';
 import type { UserProfile } from '../types';
 
@@ -41,11 +40,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
 
     if (phoneTaken) {
       setIsSyncing(false);
-      setErrorMessage(`⚠️ ${cleanPhone} telefon raqami allaqachon ro'yxatdan o'tgan! Boshqa raqam kiring.`);
+      setErrorMessage(`⚠️ ${cleanPhone} telefon raqami allaqachon ro'yxatdan o'tgan!`);
       return;
     }
 
-    const defaultAvatar = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%230d0c12" stroke="%23d4af37" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+    const defaultAvatar = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%2307080a" stroke="%23ffffff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
 
     const user: UserProfile = {
       phone: cleanPhone,
@@ -60,7 +59,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
     await SupabaseService.registerUser(user);
 
     setIsSyncing(false);
-    confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 }, colors: ['#d4af37', '#f5e396'] });
     onComplete(user);
   };
 
@@ -68,62 +66,66 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(5, 5, 7, 0.92)',
-      backdropFilter: 'blur(20px)',
+      background: 'rgba(7, 8, 10, 0.88)',
+      backdropFilter: 'blur(24px)',
+      WebkitBackdropFilter: 'blur(24px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 100,
-      padding: '1rem'
+      padding: '1.25rem'
     }}>
       <form onSubmit={handleSubmit} className="fade-in" style={{
         width: '100%',
         maxWidth: '390px',
-        background: '#0d0c12',
-        border: '1px solid rgba(212, 175, 55, 0.35)',
-        borderRadius: '28px',
-        padding: '1.85rem',
+        background: 'rgba(18, 20, 26, 0.92)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        borderRadius: '24px',
+        padding: '2rem 1.75rem',
         display: 'flex',
         flexDirection: 'column',
         gap: '1.25rem',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.9), 0 0 30px rgba(212,175,55,0.15)'
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)'
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '50%',
-            background: 'var(--gold-gradient)',
+            width: '52px',
+            height: '52px',
+            borderRadius: '16px',
+            background: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 0.75rem',
-            boxShadow: '0 0 20px rgba(212,175,55,0.4)'
+            margin: '0 auto 0.85rem'
           }}>
-            <Zap size={28} color="#000" fill="#000" />
+            <Zap size={24} color="#ffffff" fill="#ffffff" />
           </div>
-          <h2 className="text-gold-metallic" style={{ fontSize: '1.35rem', margin: 0 }}>
-            YETTI GOLD KIRISH
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.5px', margin: 0 }}>
+            YETTIGA KIRISH
           </h2>
-          <p style={{ fontSize: '0.8rem', color: '#a1a1aa', marginTop: '6px' }}>
-            Telefon raqam, ism va nik kiritib ma'lumotlar bazasiga ulaning va momental rasmlaringiz tavsiyalarga chiqsin!
+          <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '6px', lineHeight: 1.4 }}>
+            Shaxsiy profilingizni yarating. Ma'lumotlaringiz xavfsiz biriktiriladi.
           </p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           {/* Phone */}
           <div style={{ position: 'relative' }}>
-            <Phone size={18} color="#d4af37" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+            <Phone size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
               placeholder="Telefon raqam (+998 ...)"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => {
+                setPhone(e.target.value);
+                setErrorMessage('');
+              }}
               required
               style={{
                 width: '100%',
-                background: 'rgba(212,175,55,0.06)',
-                border: '1px solid rgba(212,175,55,0.25)',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
                 color: '#fff',
                 borderRadius: '14px',
                 padding: '12px 14px 12px 42px',
@@ -135,17 +137,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
 
           {/* Name */}
           <div style={{ position: 'relative' }}>
-            <User size={18} color="#d4af37" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+            <User size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
               placeholder="Ismingiz (masalan: Azizbek)"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setErrorMessage('');
+              }}
               required
               style={{
                 width: '100%',
-                background: 'rgba(212,175,55,0.06)',
-                border: '1px solid rgba(212,175,55,0.25)',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
                 color: '#fff',
                 borderRadius: '14px',
                 padding: '12px 14px 12px 42px',
@@ -157,10 +162,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
 
           {/* Nickname */}
           <div style={{ position: 'relative' }}>
-            <AtSign size={18} color="#d4af37" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+            <AtSign size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
-              placeholder="Nikname (masalan: aziz_yetti)"
+              placeholder="Nikneym (masalan: aziz_yetti)"
               value={nickname}
               onChange={(e) => {
                 setNickname(e.target.value);
@@ -169,8 +174,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
               required
               style={{
                 width: '100%',
-                background: 'rgba(212,175,55,0.06)',
-                border: '1px solid rgba(212,175,55,0.25)',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
                 color: '#fff',
                 borderRadius: '14px',
                 padding: '12px 14px 12px 42px',
@@ -183,14 +188,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
 
         {errorMessage && (
           <div style={{
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
+            background: 'rgba(239, 68, 68, 0.12)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
             color: '#fca5a5',
             padding: '10px 14px',
-            borderRadius: '14px',
+            borderRadius: '12px',
             fontSize: '0.82rem',
             textAlign: 'center',
-            fontWeight: 700,
+            fontWeight: 600,
             lineHeight: 1.4
           }}>
             {errorMessage}
@@ -203,10 +208,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
             disabled={isSyncing}
             style={{
               flex: 1,
-              background: 'var(--gold-gradient)',
+              background: '#ffffff',
               border: 'none',
-              color: '#000',
-              fontWeight: 900,
+              color: '#000000',
+              fontWeight: 800,
               fontSize: '0.95rem',
               padding: '13px',
               borderRadius: '14px',
@@ -215,10 +220,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
               alignItems: 'center',
               justifyContent: 'center',
               gap: '6px',
-              boxShadow: '0 4px 20px rgba(212,175,55,0.35)'
+              boxShadow: '0 4px 20px rgba(255, 255, 255, 0.15)'
             }}
           >
-            <CheckCircle size={18} /> {isSyncing ? 'Baza bilan sinxronlanmoqda...' : 'Tasdiqlash'}
+            {isSyncing ? 'Sinxronlanmoqda...' : 'Davom etish'} <ArrowRight size={18} />
           </button>
         </div>
       </form>

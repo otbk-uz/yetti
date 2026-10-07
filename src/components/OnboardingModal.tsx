@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Camera, Flame, User, ChevronRight, CheckCircle, ShieldCheck } from 'lucide-react';
-import confetti from 'canvas-confetti';
 
 interface OnboardingModalProps {
   onClose: () => void;
@@ -13,30 +12,26 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
     {
       id: 1,
       icon: ShieldCheck,
-      color: '#d4af37',
-      title: '1-Qadam: 📝 Birinchi o\'rinda Ro\'yxatdan O\'tish',
-      desc: 'Platformaga ilk kirganda Telefon, Ism va Nikneym (@nickname) orqali ro\'yxatdan o\'tiladi. Ma\'lumotlaringiz va barcha momental postlaringiz bazada xavfsiz biriktiriladi.'
+      title: '1. Kirish va Profil Boshqaruvi',
+      desc: 'Platformada shaxsiy @nikneymingiz va telefon raqamingiz orqali ro\'yxatdan o\'tasiz. Barcha yuklangan postlaringiz bazada xavfsiz biriktiriladi.'
     },
     {
       id: 2,
       icon: Camera,
-      color: '#f5e396',
-      title: '2-Qadam: 📸 Momental Kamera Knopkalari',
-      desc: 'Kamerada 📸 Rasm va 🎥 Video rejimini tanglaysiz. "Oddiy" va "Noir 🖤" filtrlari bor. Oltin tugmani 1 marta bosib, "Tavsiyalarga Yuklash" tugmasi orqali reski nashr qilasiz.'
+      title: '2. Instant Kamera va Media Yuklash',
+      desc: 'Kamera orqali instant rasm va video oling yoki qurilmangizdan real media fayl tanlang. Oddiy va Noir (Qora-Oq) filtrlari mavjud.'
     },
     {
       id: 3,
       icon: Flame,
-      color: '#ff0055',
-      title: '3-Qadam: 🔥 Tavsiyalar tasmamasi Knopkalari',
-      desc: 'Yuklagan rasm va videolaringiz darhol "🔥 Tavsiyalar" tasmamasiga tushadi va barcha foydalanuvchilar ❤️ Reaksiya (layk) va 💬 Izoh qoldirishi mumkin.'
+      title: '3. Tavsiyalar Tasmamasi va Reaksiyalar',
+      desc: 'Siz joylagan instant postlar darhol Tavsiyalar bo\'limiga chiqadi. Boshqa foydalanuvchilar postlaringizga layk bosishi va izoh qoldirishi mumkin.'
     },
     {
       id: 4,
       icon: User,
-      color: '#00f2fe',
-      title: '4-Qadam: 👤 Profil va Yordam Knopkalari',
-      desc: 'Profil bo\'limida barcha shaxsiy momental postlaringiz saqlanadi. Yuqoridagi "❓ Qanday ishlaydi?" va "⚙️ Profilni tahrirlash" knopkalari orqali ma\'lumotlarni boshqarasiz.'
+      title: '4. Profil va Sozlamalar Knopkasi',
+      desc: 'Profilingizda faqat o\'zingizning saqlangan postlaringiz aks etadi. Yuqori menyudagi "❓ Qanday ishlaydi?" va "@nikneym" tugmalari orqali profilni tahrirlashingiz mumkin.'
     }
   ];
 
@@ -47,7 +42,6 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
     if (step < 4) {
       setStep(step + 1);
     } else {
-      confetti({ particleCount: 50, spread: 80, origin: { y: 0.6 }, colors: ['#d4af37', '#f5e396'] });
       onClose();
     }
   };
@@ -56,8 +50,9 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(5, 5, 7, 0.94)',
-      backdropFilter: 'blur(20px)',
+      background: 'rgba(7, 8, 10, 0.88)',
+      backdropFilter: 'blur(24px)',
+      WebkitBackdropFilter: 'blur(24px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -67,16 +62,16 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
       <div className="fade-in" style={{
         width: '100%',
         maxWidth: '420px',
-        background: '#0d0c12',
-        border: '1px solid rgba(212, 175, 55, 0.4)',
-        borderRadius: '28px',
-        padding: '2rem 1.5rem',
+        background: 'rgba(18, 20, 26, 0.92)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        borderRadius: '24px',
+        padding: '2rem 1.75rem',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         textAlign: 'center',
         gap: '1.25rem',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.9), 0 0 35px rgba(212,175,55,0.2)'
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)'
       }}>
         {/* Step indicator */}
         <div style={{ display: 'flex', gap: '6px', marginBottom: '0.25rem' }}>
@@ -87,34 +82,33 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
                 width: i === step ? '28px' : '8px',
                 height: '8px',
                 borderRadius: '999px',
-                background: i === step ? 'var(--gold-gradient)' : 'rgba(255,255,255,0.15)',
+                background: i === step ? '#ffffff' : 'rgba(255,255,255,0.15)',
                 transition: 'all 0.3s ease'
               }}
             />
           ))}
         </div>
 
-        {/* Icon */}
+        {/* Icon Wireframe Badge */}
         <div style={{
-          width: '72px',
-          height: '72px',
-          borderRadius: '50%',
-          background: 'rgba(212,175,55,0.15)',
-          border: '2px solid rgba(212,175,55,0.4)',
+          width: '64px',
+          height: '64px',
+          borderRadius: '18px',
+          background: 'rgba(255, 255, 255, 0.05)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 0 25px rgba(212,175,55,0.3)'
+          justifyContent: 'center'
         }}>
-          <IconComp size={36} color={current.color} />
+          <IconComp size={32} color="#ffffff" />
         </div>
 
         {/* Text content */}
         <div>
-          <h3 className="text-gold-metallic" style={{ fontSize: '1.25rem', margin: 0, fontWeight: 900 }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
             {current.title}
           </h3>
-          <p style={{ fontSize: '0.88rem', color: '#cbd5e1', lineHeight: 1.5, marginTop: '10px' }}>
+          <p style={{ fontSize: '0.86rem', color: '#94a3b8', lineHeight: 1.5, marginTop: '10px' }}>
             {current.desc}
           </p>
         </div>
@@ -124,29 +118,29 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
           onClick={handleNext}
           style={{
             width: '100%',
-            background: 'var(--gold-gradient)',
+            background: '#ffffff',
             border: 'none',
-            color: '#000',
-            fontWeight: 900,
-            fontSize: '1rem',
-            padding: '14px',
-            borderRadius: '16px',
+            color: '#000000',
+            fontWeight: 800,
+            fontSize: '0.95rem',
+            padding: '13px',
+            borderRadius: '14px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '8px',
             marginTop: '0.5rem',
-            boxShadow: '0 4px 25px rgba(212,175,55,0.4)'
+            boxShadow: '0 4px 20px rgba(255, 255, 255, 0.15)'
           }}
         >
           {step === 4 ? (
             <>
-              <CheckCircle size={18} /> Platformadan Foydalanish
+              <CheckCircle size={18} /> Tushunarli, foydalanish
             </>
           ) : (
             <>
-              Keyingisi <ChevronRight size={18} />
+              Davom etish <ChevronRight size={18} />
             </>
           )}
         </button>
@@ -154,4 +148,3 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => 
     </div>
   );
 };
-

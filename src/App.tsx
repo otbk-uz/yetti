@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Flame, User, Zap, UserCheck, HelpCircle } from 'lucide-react';
+import { Camera, Flame, User, Zap, HelpCircle } from 'lucide-react';
 import { InstantCamera } from './components/InstantCamera';
 import { FeedView } from './components/FeedView';
 import { UserProfile } from './components/UserProfile';
@@ -60,7 +60,7 @@ export const App: React.FC = () => {
       });
     }
 
-    // Attempt Supabase live database feed fetch
+    // Fetch remote posts from Supabase DB
     SupabaseService.fetchRecommendationFeed().then(remotePosts => {
       if (remotePosts && remotePosts.length > 0) {
         setPosts(prev => {
@@ -138,8 +138,8 @@ export const App: React.FC = () => {
       {/* Top Bar Header */}
       <header className="yetti-header">
         <div className="yetti-logo" onClick={() => setActiveView('camera')}>
-          <Zap size={22} color="#d4af37" fill="#d4af37" />
-          <span className="text-gold-metallic">YETTI</span>
+          <Zap size={20} color="#ffffff" fill="#ffffff" />
+          <span>YETTI</span>
         </div>
 
         {/* User profile & Onboarding help button */}
@@ -147,12 +147,12 @@ export const App: React.FC = () => {
           <button
             onClick={() => setShowOnboarding(true)}
             style={{
-              background: 'rgba(212,175,55,0.12)',
-              border: '1px solid rgba(212,175,55,0.3)',
-              color: '#f5e396',
-              padding: '6px 10px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              color: '#e2e8f0',
+              padding: '6px 12px',
               borderRadius: '999px',
-              fontSize: '0.75rem',
+              fontSize: '0.76rem',
               fontWeight: 700,
               cursor: 'pointer',
               display: 'flex',
@@ -161,17 +161,17 @@ export const App: React.FC = () => {
             }}
             title="Qanday ishlaydi?"
           >
-            <HelpCircle size={14} color="#d4af37" />
+            <HelpCircle size={14} color="#94a3b8" />
             <span>Qanday ishlaydi?</span>
           </button>
 
           <button
             onClick={() => setShowAuthModal(true)}
             style={{
-              background: 'rgba(212,175,55,0.12)',
-              border: '1px solid rgba(212,175,55,0.3)',
-              color: '#f5e396',
-              padding: '5px 12px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: '#ffffff',
+              padding: '6px 14px',
               borderRadius: '999px',
               fontSize: '0.78rem',
               fontWeight: 800,
@@ -181,8 +181,8 @@ export const App: React.FC = () => {
               gap: '6px'
             }}
           >
-            <UserCheck size={14} color="#d4af37" />
-            <span>@{user.nickname}</span>
+            <User size={14} color="#ffffff" />
+            <span>@{user.nickname || 'kirish'}</span>
           </button>
         </div>
       </header>
@@ -224,7 +224,7 @@ export const App: React.FC = () => {
           onClick={() => setActiveView('camera')}
         >
           <div className="tab-icon-wrapper">
-            <Camera size={22} color={activeView === 'camera' ? '#d4af37' : '#71717a'} />
+            <Camera size={22} color={activeView === 'camera' ? '#ffffff' : '#64748b'} />
           </div>
           <span>Momental Kamera</span>
         </button>
@@ -234,7 +234,7 @@ export const App: React.FC = () => {
           onClick={() => setActiveView('feed')}
         >
           <div className="tab-icon-wrapper">
-            <Flame size={22} color={activeView === 'feed' ? '#d4af37' : '#71717a'} />
+            <Flame size={22} color={activeView === 'feed' ? '#ffffff' : '#64748b'} />
           </div>
           <span>Tavsiyalar</span>
         </button>
@@ -244,7 +244,7 @@ export const App: React.FC = () => {
           onClick={() => setActiveView('profile')}
         >
           <div className="tab-icon-wrapper">
-            <User size={22} color={activeView === 'profile' ? '#d4af37' : '#71717a'} />
+            <User size={22} color={activeView === 'profile' ? '#ffffff' : '#64748b'} />
           </div>
           <span>Profil</span>
         </button>

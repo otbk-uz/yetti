@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, MessageCircle, Share2, Zap, Volume2, VolumeX, Send } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { Heart, MessageCircle, Share2, Zap, Volume2, VolumeX, Send, Search } from 'lucide-react';
 import type { MediaPost } from '../types';
 
 interface FeedViewProps {
@@ -10,10 +9,10 @@ interface FeedViewProps {
 }
 
 export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCamera }) => {
-  const [activeTab, setActiveTab] = useState<'recs' | 'momental'>('recs');
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
   const [commentInput, setCommentInput] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [commentsMap, setCommentsMap] = useState<Record<string, string[]>>({});
 
   const handleAddComment = (postId: string) => {
@@ -23,62 +22,100 @@ export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCam
       [postId]: [...(prev[postId] || []), commentInput]
     }));
     setCommentInput('');
-    confetti({ particleCount: 25, spread: 50, origin: { y: 0.8 }, colors: ['#d4af37', '#ffffff'] });
   };
 
+  // Filter posts by search query (author, hashtag, caption)
+  const filteredPosts = posts.filter(post => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      (post.authorName || '').toLowerCase().includes(q) ||
+      (post.authorNickname || '').toLowerCase().includes(q) ||
+      (post.caption || '').toLowerCase().includes(q)
+    );
+  });
+
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', background: '#050507', overflowY: 'auto', paddingBottom: '90px' }}>
-      {/* Top Recommendations Filter Bar */}
+    <div style={{ position: 'relative', width: '100%', height: '100%', background: '#07080a', overflowY: 'auto', paddingBottom: '90px' }}>
+      {/* Search & Top Feed Header */}
       <div style={{
         position: 'sticky',
         top: 0,
         zIndex: 20,
         padding: '12px 1rem',
-        background: 'linear-gradient(to bottom, rgba(5,5,7,0.98), rgba(5,5,7,0.5))',
-        backdropFilter: 'blur(12px)',
+        background: 'rgba(7, 8, 10, 0.92)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         display: 'flex',
-        justifyContent: 'center',
-        gap: '0.5rem'
+        flexDirection: 'column',
+        gap: '0.65rem'
       }}>
-        <button
-          className={`filter-chip ${activeTab === 'recs' ? 'active' : ''}`}
-          onClick={() => setActiveTab('recs')}
-        >
-          🔥 Tavsiyalar (Recommendation)
-        </button>
-        <button
-          className={`filter-chip ${activeTab === 'momental' ? 'active' : ''}`}
-          onClick={() => setActiveTab('momental')}
-        >
-          ⚡ Momental
-        </button>
+        <div style={{ position: 'relative', width: '100%' }}>
+          <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+          <input
+            type="text"
+            placeholder="Qidiruv (@nikneym, #xesteg, izoh)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              color: '#fff',
+              borderRadius: '999px',
+              padding: '8px 14px 8px 36px',
+              fontSize: '0.82rem',
+              outline: 'none'
+            }}
+          />
+        </div>
       </div>
 
       {/* Media Posts Feed List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '0 0.75rem' }}>
-        {posts.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem 1rem', color: '#a1a1aa' }}>
-            <Zap size={48} color="#d4af37" style={{ marginBottom: '1rem' }} />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#fff' }}>Hozircha momentlar yo'q</h3>
-            <p style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>Birinchi bo'lib instant rasm yoki video ulashing!</p>
-            <button
-              onClick={onGoToCamera}
-              style={{
-                marginTop: '1.25rem',
-                background: 'var(--gold-gradient)',
-                color: '#000',
-                border: 'none',
-                fontWeight: 900,
-                padding: '12px 24px',
-                borderRadius: '999px',
-                cursor: 'pointer'
-              }}
-            >
-              📸 Rasm / Video Olish
-            </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1rem 0.75rem 0' }}>
+        {filteredPosts.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '4rem 1.5rem', color: '#94a3b8' }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '18px',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1rem'
+            }}>
+              <Zap size={28} color="#ffffff" />
+            </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>
+              {searchQuery ? 'Hech narsa topilmadi' : "Hozircha momentlar yo'q"}
+            </h3>
+            <p style={{ fontSize: '0.82rem', marginTop: '0.4rem', lineHeight: 1.5 }}>
+              {searchQuery ? "Boshqa kalit so'z bilan qidirib ko'ring." : "Birinchi bo'lib instant rasm yoki video joylang!"}
+            </p>
+            {!searchQuery && (
+              <button
+                onClick={onGoToCamera}
+                style={{
+                  marginTop: '1.25rem',
+                  background: '#ffffff',
+                  color: '#000000',
+                  border: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.88rem',
+                  padding: '12px 24px',
+                  borderRadius: '999px',
+                  cursor: 'pointer'
+                }}
+              >
+                📸 Instant Rasm / Video Olish
+              </button>
+            )}
           </div>
         ) : (
-          posts.map(post => (
+          filteredPosts.map(post => (
             <div
               key={post.id}
               style={{
@@ -86,12 +123,12 @@ export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCam
                 width: '100%',
                 borderRadius: '24px',
                 overflow: 'hidden',
-                background: '#100f15',
-                border: '1px solid rgba(212, 175, 55, 0.22)',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.8)'
+                background: 'rgba(18, 20, 26, 0.75)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.8)'
               }}
             >
-              {/* Media element */}
+              {/* Media Container */}
               <div style={{ position: 'relative', width: '100%', height: '420px', background: '#000' }}>
                 {post.type === 'photo' ? (
                   <img
@@ -115,9 +152,10 @@ export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCam
                         position: 'absolute',
                         top: '12px',
                         right: '12px',
-                        background: 'rgba(0,0,0,0.6)',
-                        border: '1px solid rgba(212,175,55,0.3)',
-                        color: '#f5e396',
+                        background: 'rgba(7,8,10,0.7)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        color: '#fff',
                         borderRadius: '50%',
                         padding: '8px',
                         cursor: 'pointer'
@@ -128,7 +166,7 @@ export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCam
                   </div>
                 )}
 
-                {/* Author Info Overlay */}
+                {/* Author Badge */}
                 <div style={{
                   position: 'absolute',
                   top: '12px',
@@ -136,27 +174,27 @@ export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCam
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.6rem',
-                  background: 'rgba(5,5,7,0.75)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(212,175,55,0.3)',
-                  padding: '4px 12px',
+                  background: 'rgba(7, 8, 10, 0.75)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  padding: '4px 12px 4px 6px',
                   borderRadius: '999px'
                 }}>
                   <img
-                    src={post.authorAvatar}
+                    src={post.authorAvatar || `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%2307080a" stroke="%23ffffff" stroke-width="2"><circle cx="12" cy="7" r="4"></circle></svg>`}
                     alt={post.authorName}
-                    style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #d4af37' }}
+                    style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.3)' }}
                   />
                   <div>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#f5e396', display: 'block', lineHeight: 1.2 }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#ffffff', display: 'block', lineHeight: 1.2 }}>
                       @{post.authorNickname}
                     </span>
-                    <span style={{ fontSize: '0.65rem', color: '#a1a1aa' }}>{post.timestamp}</span>
+                    <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>{post.timestamp}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Bottom Actions Bar */}
+              {/* Actions Bar */}
               <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -165,7 +203,7 @@ export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCam
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: post.isLiked ? '#d4af37' : '#fff',
+                        color: post.isLiked ? '#ef4444' : '#fff',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -174,8 +212,8 @@ export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCam
                         fontWeight: 800
                       }}
                     >
-                      <Heart size={22} fill={post.isLiked ? '#d4af37' : 'none'} color={post.isLiked ? '#d4af37' : '#fff'} />
-                      <span style={{ color: post.isLiked ? '#f5e396' : '#fff' }}>{post.likes}</span>
+                      <Heart size={22} fill={post.isLiked ? '#ef4444' : 'none'} color={post.isLiked ? '#ef4444' : '#fff'} />
+                      <span>{post.likes}</span>
                     </button>
 
                     <button
@@ -197,31 +235,31 @@ export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCam
                     </button>
                   </div>
 
-                  <button style={{ background: 'none', border: 'none', color: '#f5e396', cursor: 'pointer' }}>
+                  <button style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
                     <Share2 size={20} />
                   </button>
                 </div>
 
                 {post.caption && (
-                  <p style={{ fontSize: '0.85rem', color: '#e4e4e7', lineHeight: 1.4, margin: 0 }}>
-                    <strong style={{ color: '#f5e396', marginRight: '6px' }}>@{post.authorNickname}</strong>
+                  <p style={{ fontSize: '0.85rem', color: '#e2e8f0', lineHeight: 1.4, margin: 0 }}>
+                    <strong style={{ color: '#ffffff', marginRight: '6px' }}>@{post.authorNickname}</strong>
                     {post.caption}
                   </p>
                 )}
 
-                {/* Inline Comment Modal section */}
+                {/* Inline Comment Section */}
                 {activeCommentPostId === post.id && (
                   <div className="fade-in" style={{
                     marginTop: '0.5rem',
                     paddingTop: '0.75rem',
-                    borderTop: '1px solid rgba(212,175,55,0.15)',
+                    borderTop: '1px solid rgba(255,255,255,0.08)',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '0.5rem'
                   }}>
                     {commentsMap[post.id]?.map((c, i) => (
-                      <div key={i} style={{ fontSize: '0.78rem', color: '#a1a1aa' }}>
-                        💬 <strong style={{ color: '#f5e396' }}>Siz:</strong> {c}
+                      <div key={i} style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                        💬 <strong style={{ color: '#ffffff' }}>Siz:</strong> {c}
                       </div>
                     ))}
 
@@ -234,8 +272,8 @@ export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCam
                         onKeyDown={(e) => e.key === 'Enter' && handleAddComment(post.id)}
                         style={{
                           flex: 1,
-                          background: 'rgba(212,175,55,0.08)',
-                          border: '1px solid rgba(212,175,55,0.25)',
+                          background: 'rgba(255, 255, 255, 0.04)',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
                           color: '#fff',
                           borderRadius: '999px',
                           padding: '6px 14px',
@@ -245,7 +283,7 @@ export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCam
                       />
                       <button
                         onClick={() => handleAddComment(post.id)}
-                        style={{ background: 'var(--gold-gradient)', color: '#000', border: 'none', borderRadius: '50%', padding: '6px', cursor: 'pointer' }}
+                        style={{ background: '#ffffff', color: '#000000', border: 'none', borderRadius: '50%', padding: '7px', cursor: 'pointer' }}
                       >
                         <Send size={14} />
                       </button>
