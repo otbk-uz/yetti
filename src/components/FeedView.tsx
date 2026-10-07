@@ -154,7 +154,7 @@ export const FeedView: React.FC<FeedViewProps> = ({ posts, onLikePost, onGoToCam
                     <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#f5e396', display: 'block', lineHeight: 1.2 }}>
                       @{post.authorNickname}
                     </span>
-                    <span style={{ fontSize: '0.65rem', color: '#a1a1aa' }}>{post.timestamp} • D1 Cloud</span>
+                    <span style={{ fontSize: '0.65rem', color: '#a1a1aa' }}>{post.timestamp}</span>
                   </div>
                 </div>
               </div>

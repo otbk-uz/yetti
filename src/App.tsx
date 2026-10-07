@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Flame, User, Zap, UserCheck, Cloud } from 'lucide-react';
+import { Camera, Flame, User, Zap, UserCheck } from 'lucide-react';
 import { InstantCamera } from './components/InstantCamera';
 import { FeedView } from './components/FeedView';
 import { UserProfile } from './components/UserProfile';
@@ -66,16 +66,10 @@ export const App: React.FC = () => {
         <div className="yetti-logo" onClick={() => setActiveView('camera')}>
           <Zap size={22} color="#d4af37" fill="#d4af37" />
           <span className="text-gold-metallic">YETTI</span>
-          <span className="yetti-badge">MOMENTAL</span>
         </div>
 
-        {/* Cloudflare D1 & R2 indicator + User profile badge */}
+        {/* User profile badge */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div className="cloudflare-badge" title="Cloudflare D1 Database & R2 Storage">
-            <Cloud size={12} color="#d4af37" />
-            <span>D1+R2</span>
-          </div>
-
           <button
             onClick={() => setShowAuthModal(true)}
             style={{
@@ -83,9 +77,9 @@ export const App: React.FC = () => {
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(212,175,55,0.3)',
               color: '#f5e396',
-              padding: '5px 12px',
+              padding: '5px 14px',
               borderRadius: '999px',
-              fontSize: '0.78rem',
+              fontSize: '0.8rem',
               fontWeight: 800,
               cursor: 'pointer',
               display: 'flex',

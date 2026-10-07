@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, Send, X, Cloud } from 'lucide-react';
+import { Camera, Send, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CloudflareService } from '../services/cloudflare';
 import type { MediaPost } from '../types';
@@ -24,7 +24,7 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
 
   const [mode, setMode] = useState<'photo' | 'video'>('photo');
   const [cameraActive, setCameraActive] = useState<boolean>(false);
-  const [selectedFilter, setSelectedFilter] = useState<string>('gold');
+  const [selectedFilter, setSelectedFilter] = useState<string>('oddiy');
   const [capturedMedia, setCapturedMedia] = useState<{ type: 'photo' | 'video'; url: string } | null>(null);
   const [caption, setCaption] = useState<string>('');
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -33,10 +33,8 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
 
   // Filters mapping
   const filterStyles: Record<string, string> = {
-    gold: 'contrast(1.15) saturate(1.3) sepia(0.25) hue-rotate(-10deg)',
-    cyber: 'contrast(1.2) hue-rotate(180deg) saturate(1.4)',
-    warm: 'sepia(0.4) contrast(1.1) saturate(1.3)',
-    noir: 'grayscale(1) contrast(1.4)'
+    oddiy: 'none',
+    noir: 'grayscale(1) contrast(1.35)'
   };
 
   useEffect(() => {
@@ -213,9 +211,6 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
             >
               <X size={20} color="#f5e396" />
             </button>
-            <div className="cloudflare-badge">
-              <Cloud size={14} color="#d4af37" /> Cloudflare D1 & R2 Ready
-            </div>
           </div>
 
           <div style={{
@@ -332,9 +327,7 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
             padding: '0 1rem'
           }}>
             {[
-              { id: 'gold', label: 'Gold Glow 🌟' },
-              { id: 'cyber', label: 'Cyber 🌐' },
-              { id: 'warm', label: 'Warm 🌅' },
+              { id: 'oddiy', label: 'Oddiy' },
               { id: 'noir', label: 'Noir 🖤' }
             ].map(f => (
               <button
