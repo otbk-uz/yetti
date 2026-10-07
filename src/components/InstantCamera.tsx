@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Camera, Send, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { CloudflareService } from '../services/cloudflare';
+import { SupabaseService } from '../services/supabase';
 import type { MediaPost } from '../types';
 
 interface InstantCameraProps {
@@ -148,8 +148,11 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
       filter: selectedFilter
     };
 
-    // Cloudflare R2 & D1 sync
-    await CloudflareService.uploadInstantPost(newPost);
+    // Supabase DB & Storage upload
+    const uploadRes = await SupabaseService.uploadInstantPost(newPost);
+    if (uploadRes.mediaUrl) {
+      newPost.mediaUrl = uploadRes.mediaUrl;
+    }
 
     setIsSyncingCloudflare(false);
     onPublishPost(newPost);

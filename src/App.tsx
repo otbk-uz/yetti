@@ -4,7 +4,7 @@ import { InstantCamera } from './components/InstantCamera';
 import { FeedView } from './components/FeedView';
 import { UserProfile } from './components/UserProfile';
 import { AuthModal } from './components/AuthModal';
-import { CloudflareService } from './services/cloudflare';
+import { SupabaseService } from './services/supabase';
 import { INITIAL_USER, INITIAL_RECOMMENDATIONS } from './data/mockData';
 import type { MainView, MediaPost, UserProfile as UserProfileType } from './types';
 
@@ -14,7 +14,7 @@ export const App: React.FC = () => {
   const [posts, setPosts] = useState<MediaPost[]>(INITIAL_RECOMMENDATIONS);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
 
-  // Load persistent user profile & Cloudflare D1 feed
+  // Load persistent user profile & Supabase live database feed
   useEffect(() => {
     const savedUser = localStorage.getItem('yetti_user');
     if (savedUser) {
@@ -25,8 +25,8 @@ export const App: React.FC = () => {
       }
     }
 
-    // Attempt Cloudflare D1 feed fetch
-    CloudflareService.fetchRecommendationFeed().then(remotePosts => {
+    // Attempt Supabase live database feed fetch
+    SupabaseService.fetchRecommendationFeed().then(remotePosts => {
       if (remotePosts && remotePosts.length > 0) {
         setPosts(prev => [...remotePosts, ...prev]);
       }
@@ -41,10 +41,12 @@ export const App: React.FC = () => {
     setPosts(prev => prev.map(p => {
       if (p.id === postId) {
         const isLiked = !p.isLiked;
+        const newLikes = isLiked ? p.likes + 1 : p.likes - 1;
+        SupabaseService.toggleLikePost(postId, newLikes);
         return {
           ...p,
           isLiked,
-          likes: isLiked ? p.likes + 1 : p.likes - 1
+          likes: newLikes
         };
       }
       return p;

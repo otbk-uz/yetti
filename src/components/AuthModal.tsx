@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Phone, User, AtSign, Zap, CheckCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { CloudflareService } from '../services/cloudflare';
+import { SupabaseService } from '../services/supabase';
 import type { UserProfile } from '../types';
 
 interface AuthModalProps {
@@ -29,8 +29,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
       isLoggedIn: true
     };
 
-    // Register user to Cloudflare D1 Database
-    await CloudflareService.registerUser(user);
+    // Register user profile to Supabase Database
+    await SupabaseService.registerUser(user);
 
     setIsSyncing(false);
     confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 }, colors: ['#d4af37', '#f5e396'] });
@@ -79,7 +79,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
             YETTI GOLD KIRISH
           </h2>
           <p style={{ fontSize: '0.8rem', color: '#a1a1aa', marginTop: '6px' }}>
-            Telefon raqam, ism va nik kiritib Cloudflare D1 ga ulaning va momental rasmlaringiz tavsiyalarga chiqsin!
+            Telefon raqam, ism va nik kiritib ma'lumotlar bazasiga ulaning va momental rasmlaringiz tavsiyalarga chiqsin!
           </p>
         </div>
 
@@ -172,7 +172,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
               boxShadow: '0 4px 20px rgba(212,175,55,0.35)'
             }}
           >
-            <CheckCircle size={18} /> {isSyncing ? 'Cloudflare D1 Synced...' : 'Tasdiqlash'}
+            <CheckCircle size={18} /> {isSyncing ? 'Baza bilan sinxronlanmoqda...' : 'Tasdiqlash'}
           </button>
         </div>
       </form>
