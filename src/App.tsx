@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Flame, User, Zap, UserCheck } from 'lucide-react';
+import { Camera, Flame, User, Zap, UserCheck, HelpCircle } from 'lucide-react';
 import { InstantCamera } from './components/InstantCamera';
 import { FeedView } from './components/FeedView';
 import { UserProfile } from './components/UserProfile';
 import { AuthModal } from './components/AuthModal';
+import { OnboardingModal } from './components/OnboardingModal';
 import { SupabaseService } from './services/supabase';
 import { INITIAL_USER, INITIAL_RECOMMENDATIONS } from './data/mockData';
 import type { MainView, MediaPost, UserProfile as UserProfileType } from './types';
@@ -12,29 +13,90 @@ export const App: React.FC = () => {
   const [activeView, setActiveView] = useState<MainView>('camera'); // Camera First as requested!
   const [user, setUser] = useState<UserProfileType>(INITIAL_USER);
   const [posts, setPosts] = useState<MediaPost[]>(INITIAL_RECOMMENDATIONS);
-  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(!localStorage.getItem('yetti_user'));
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
 
-  // Load persistent user profile & Supabase live database feed
+  const normalizeNick = (nick?: string) => (nick || '').replace(/^@/, '').toLowerCase().trim();
+
+  // Load persistent user profile & posts & check registration status
   useEffect(() => {
-    const savedUser = localStorage.getItem('yetti_user');
-    if (savedUser) {
+    const savedUserStr = localStorage.getItem('yetti_user');
+    if (savedUserStr) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUserStr);
+        setUser(parsed);
+        if (!parsed.isRegistered) {
+          setShowAuthModal(true);
+        }
+      } catch (e) {
+        setShowAuthModal(true);
+      }
+    } else {
+      // First time user -> Force registration modal first!
+      setShowAuthModal(true);
+    }
+
+    // Load saved local user posts
+    let localPosts: MediaPost[] = [];
+    const savedLocalPosts = localStorage.getItem('yetti_user_posts');
+    if (savedLocalPosts) {
+      try {
+        localPosts = JSON.parse(savedLocalPosts);
       } catch (e) {
         console.log(e);
       }
     }
 
+    if (localPosts.length > 0) {
+      setPosts(prev => {
+        const combined = [...localPosts, ...prev];
+        const uniqueMap = new Map<string, MediaPost>();
+        combined.forEach(item => {
+          if (!uniqueMap.has(item.id)) {
+            uniqueMap.set(item.id, item);
+          }
+        });
+        return Array.from(uniqueMap.values());
+      });
+    }
+
     // Attempt Supabase live database feed fetch
     SupabaseService.fetchRecommendationFeed().then(remotePosts => {
       if (remotePosts && remotePosts.length > 0) {
-        setPosts(prev => [...remotePosts, ...prev]);
+        setPosts(prev => {
+          const combined = [...localPosts, ...remotePosts, ...prev];
+          const uniqueMap = new Map<string, MediaPost>();
+          combined.forEach(item => {
+            if (!uniqueMap.has(item.id)) {
+              uniqueMap.set(item.id, item);
+            }
+          });
+          return Array.from(uniqueMap.values());
+        });
       }
     });
   }, []);
 
   const handlePublishPost = (newPost: MediaPost) => {
-    setPosts(prev => [newPost, ...prev]);
+    const cleanedPost: MediaPost = {
+      ...newPost,
+      authorNickname: normalizeNick(newPost.authorNickname || user.nickname)
+    };
+
+    setPosts(prev => [cleanedPost, ...prev]);
+
+    // Save to local user posts storage
+    const savedLocalPosts = localStorage.getItem('yetti_user_posts');
+    let localArray: MediaPost[] = [];
+    if (savedLocalPosts) {
+      try {
+        localArray = JSON.parse(savedLocalPosts);
+      } catch (e) {
+        localArray = [];
+      }
+    }
+    localArray = [cleanedPost, ...localArray];
+    localStorage.setItem('yetti_user_posts', JSON.stringify(localArray));
   };
 
   const handleLikePost = (postId: string) => {
@@ -54,12 +116,22 @@ export const App: React.FC = () => {
   };
 
   const handleSaveUser = (updatedUser: UserProfileType) => {
-    setUser(updatedUser);
-    localStorage.setItem('yetti_user', JSON.stringify(updatedUser));
+    const cleanedUser = {
+      ...updatedUser,
+      nickname: normalizeNick(updatedUser.nickname)
+    };
+    setUser(cleanedUser);
+    localStorage.setItem('yetti_user', JSON.stringify(cleanedUser));
     setShowAuthModal(false);
+    setShowOnboarding(true); // Open onboarding tutorial right after registration!
   };
 
-  const userPosts = posts.filter(p => p.authorNickname === user.nickname);
+  // Filter posts belonging to current user safely ignoring '@' and case
+  const userPosts = posts.filter(p => {
+    const postNick = normalizeNick(p.authorNickname);
+    const userNick = normalizeNick(user.nickname);
+    return postNick === userNick && userNick !== '';
+  });
 
   return (
     <div className="yetti-app">
@@ -70,18 +142,38 @@ export const App: React.FC = () => {
           <span className="text-gold-metallic">YETTI</span>
         </div>
 
-        {/* User profile badge */}
+        {/* User profile & Onboarding help button */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button
+            onClick={() => setShowOnboarding(true)}
+            style={{
+              background: 'rgba(212,175,55,0.12)',
+              border: '1px solid rgba(212,175,55,0.3)',
+              color: '#f5e396',
+              padding: '6px 10px',
+              borderRadius: '999px',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+            title="Qanday ishlaydi?"
+          >
+            <HelpCircle size={14} color="#d4af37" />
+            <span>Qanday ishlaydi?</span>
+          </button>
+
           <button
             onClick={() => setShowAuthModal(true)}
             style={{
               background: 'rgba(212,175,55,0.12)',
-              backdropFilter: 'blur(10px)',
               border: '1px solid rgba(212,175,55,0.3)',
               color: '#f5e396',
-              padding: '5px 14px',
+              padding: '5px 12px',
               borderRadius: '999px',
-              fontSize: '0.8rem',
+              fontSize: '0.78rem',
               fontWeight: 800,
               cursor: 'pointer',
               display: 'flex',
@@ -163,6 +255,13 @@ export const App: React.FC = () => {
         <AuthModal
           onComplete={handleSaveUser}
           currentUser={user}
+        />
+      )}
+
+      {/* Interactive Onboarding Tutorial */}
+      {showOnboarding && (
+        <OnboardingModal
+          onClose={() => setShowOnboarding(false)}
         />
       )}
     </div>

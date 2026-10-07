@@ -26,7 +26,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
       nickname: nickname.replace('@', ''),
       name,
       avatar: currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-      isLoggedIn: true
+      isLoggedIn: true,
+      isRegistered: true
     };
 
     // Register user profile to Supabase Database

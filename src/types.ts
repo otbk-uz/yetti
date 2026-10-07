@@ -7,6 +7,7 @@ export interface UserProfile {
   avatar: string;
   bio?: string;
   isLoggedIn: boolean;
+  isRegistered?: boolean;
 }
 
 export interface MediaPost {
