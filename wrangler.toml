@@ -1,14 +1,9 @@
 name = "yetti-instant-api"
 main = "src/worker.ts"
-compatibility_date = "2026-10-08"
+compatibility_date = "2026-10-07"
 
 # Cloudflare D1 Database binding
 [[d1_databases]]
 binding = "DB"
 database_name = "yetti-db"
-database_id = "yetti-d1-production-id"
-
-# Cloudflare R2 Object Storage binding for photos and videos
-[[r2_buckets]]
-binding = "MEDIA_BUCKET"
-bucket_name = "yetti-media-storage"
+database_id = "1adca35a-69e2-47b4-bc3a-1622f7b49677"

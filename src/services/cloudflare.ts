@@ -1,7 +1,7 @@
 import type { MediaPost, UserProfile } from '../types';
 
 // Cloudflare Workers REST API endpoint URL
-const CLOUDFLARE_WORKER_API = 'https://api.yetti.uz/v1';
+const CLOUDFLARE_WORKER_API = 'https://yetti-instant-api.yetti.workers.dev/v1';
 
 export class CloudflareService {
 

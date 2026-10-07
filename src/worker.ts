@@ -1,10 +1,10 @@
 /// <reference types="@cloudflare/workers-types" />
 
-// Cloudflare Worker API Backend for YETTI Instant Platform (D1 + R2)
+// Cloudflare Worker API Backend for YETTI Instant Platform (D1 Database)
 
 export interface Env {
   DB: D1Database;
-  MEDIA_BUCKET: R2Bucket;
+  MEDIA_BUCKET?: R2Bucket;
 }
 
 export default {
@@ -54,21 +54,20 @@ export default {
         });
       }
 
-      // 3. POST /v1/r2/upload - Upload instant photo/video to Cloudflare R2 Bucket
+      // 3. POST /v1/r2/upload - Upload media
       if (url.pathname === '/v1/r2/upload' && request.method === 'POST') {
         const { mediaData, mediaType, postId } = await request.json() as any;
         const key = `yetti_${postId}.${mediaType === 'video' ? 'mp4' : 'jpg'}`;
 
-        // Convert base64 data to binary
-        const base64Data = mediaData.split(',')[1] || mediaData;
-        const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+        if (env.MEDIA_BUCKET) {
+          const base64Data = mediaData.split(',')[1] || mediaData;
+          const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+          await env.MEDIA_BUCKET.put(key, binaryData, {
+            httpMetadata: { contentType: mediaType === 'video' ? 'video/mp4' : 'image/jpeg' },
+          });
+        }
 
-        await env.MEDIA_BUCKET.put(key, binaryData, {
-          httpMetadata: { contentType: mediaType === 'video' ? 'video/mp4' : 'image/jpeg' },
-        });
-
-        const r2PublicUrl = `https://media.yetti.uz/${key}`;
-        return new Response(JSON.stringify({ success: true, mediaUrl: r2PublicUrl }), {
+        return new Response(JSON.stringify({ success: true, mediaUrl: mediaData }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -93,7 +92,7 @@ export default {
         });
       }
 
-      return new Response('YETTI Cloudflare Worker API Operational', { headers: corsHeaders });
+      return new Response('YETTI Cloudflare Worker D1 API Operational', { headers: corsHeaders });
     } catch (err: any) {
       return new Response(JSON.stringify({ error: err.message }), {
         status: 500,
