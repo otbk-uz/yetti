@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, Send, X, Upload, RefreshCw } from 'lucide-react';
+import { Camera, Send, X, Upload, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { SupabaseService } from '../services/supabase';
 import type { MediaPost } from '../types';
 
@@ -342,7 +342,7 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
             </div>
           )}
 
-          {/* Top Filter Chips & Camera Switcher */}
+          {/* Top Filter Chips & Camera Switcher & File Upload */}
           <div style={{
             position: 'absolute',
             top: 76,
@@ -382,6 +382,23 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
             >
               <RefreshCw size={13} />
               <span>{facingMode === 'user' ? 'Oldi' : 'Orqa'}</span>
+            </button>
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="filter-chip"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                background: 'rgba(56, 189, 248, 0.2)',
+                borderColor: 'rgba(56, 189, 248, 0.4)',
+                color: '#ffffff'
+              }}
+              title="Galereyadan fayl (rasm/video) yuklash"
+            >
+              <Upload size={13} />
+              <span>Fayl</span>
             </button>
           </div>
 
@@ -439,16 +456,41 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
               </button>
             </div>
 
-            {/* Shutter Button */}
-            {mode === 'photo' ? (
-              <button className="shutter-btn" onClick={handleTakeSnapshot}>
-                <div className="shutter-inner" />
+            {/* Bottom Row: Shutter & Direct File Upload */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+              {/* Direct File Upload button next to shutter */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  width: '52px',
+                  height: '52px',
+                  borderRadius: '50%',
+                  background: 'rgba(15,17,23,0.85)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.5)'
+                }}
+                title="Galereyadan fayl yuklash"
+              >
+                <ImageIcon size={22} />
               </button>
-            ) : (
-              <button className={`shutter-btn ${isRecording ? 'recording' : ''}`} onClick={handleRecordVideo}>
-                <div className="shutter-inner" />
-              </button>
-            )}
+
+              {/* Shutter Button */}
+              {mode === 'photo' ? (
+                <button className="shutter-btn" onClick={handleTakeSnapshot}>
+                  <div className="shutter-inner" />
+                </button>
+              ) : (
+                <button className={`shutter-btn ${isRecording ? 'recording' : ''}`} onClick={handleRecordVideo}>
+                  <div className="shutter-inner" />
+                </button>
+              )}
+            </div>
 
             {isRecording && (
               <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '0.85rem' }}>
