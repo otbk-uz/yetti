@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, Send, X, Upload } from 'lucide-react';
+import { Camera, Send, X, Upload, RefreshCw } from 'lucide-react';
 import { SupabaseService } from '../services/supabase';
 import type { MediaPost } from '../types';
 
@@ -23,6 +23,7 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [mode, setMode] = useState<'photo' | 'video'>('photo');
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [cameraActive, setCameraActive] = useState<boolean>(false);
   const [selectedFilter, setSelectedFilter] = useState<string>('oddiy');
   const [capturedMedia, setCapturedMedia] = useState<{ type: 'photo' | 'video'; url: string } | null>(null);
@@ -43,7 +44,7 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
     async function startCamera() {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 1280 } },
+          video: { facingMode: facingMode, width: { ideal: 720 }, height: { ideal: 1280 } },
           audio: false
         });
         if (videoRef.current) {
@@ -65,7 +66,7 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [capturedMedia]);
+  }, [capturedMedia, facingMode]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -342,17 +343,18 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
             </div>
           )}
 
-          {/* Top Filter Chips */}
+          {/* Top Filter Chips & Camera Switcher */}
           <div style={{
             position: 'absolute',
             top: 76,
             left: 0,
             right: 0,
             display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
-            gap: '0.5rem',
+            gap: '0.4rem',
             zIndex: 10,
-            padding: '0 1rem'
+            padding: '0 0.75rem'
           }}>
             {[
               { id: 'oddiy', label: 'Oddiy' },
@@ -367,6 +369,22 @@ export const InstantCamera: React.FC<InstantCameraProps> = ({
                 {f.label}
               </button>
             ))}
+
+            <button
+              onClick={() => setFacingMode(prev => prev === 'user' ? 'environment' : 'user')}
+              className="filter-chip"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                background: 'rgba(255,255,255,0.12)',
+                borderColor: 'rgba(255,255,255,0.25)'
+              }}
+              title="Oldi / Orqa kameraga o'tkazish"
+            >
+              <RefreshCw size={13} />
+              <span>{facingMode === 'user' ? 'Oldi' : 'Orqa'}</span>
+            </button>
           </div>
 
           {/* Shutter & Mode Control Area */}

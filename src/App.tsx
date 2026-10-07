@@ -115,6 +115,45 @@ export const App: React.FC = () => {
     }));
   };
 
+  const handleDeletePost = (postId: string) => {
+    setPosts(prev => prev.filter(p => p.id !== postId));
+
+    // Remove from local storage yetti_user_posts
+    const savedLocalPosts = localStorage.getItem('yetti_user_posts');
+    if (savedLocalPosts) {
+      try {
+        const localArray: MediaPost[] = JSON.parse(savedLocalPosts);
+        const updated = localArray.filter(p => p.id !== postId);
+        localStorage.setItem('yetti_user_posts', JSON.stringify(updated));
+      } catch (e) {}
+    }
+
+    // Delete from Supabase DB
+    SupabaseService.deletePost(postId);
+  };
+
+  const handleEditCaption = (postId: string, newCaption: string) => {
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        return { ...p, caption: newCaption };
+      }
+      return p;
+    }));
+
+    // Update in local storage
+    const savedLocalPosts = localStorage.getItem('yetti_user_posts');
+    if (savedLocalPosts) {
+      try {
+        const localArray: MediaPost[] = JSON.parse(savedLocalPosts);
+        const updated = localArray.map(p => p.id === postId ? { ...p, caption: newCaption } : p);
+        localStorage.setItem('yetti_user_posts', JSON.stringify(updated));
+      } catch (e) {}
+    }
+
+    // Update in Supabase DB
+    SupabaseService.updatePostCaption(postId, newCaption);
+  };
+
   const handleSaveUser = (updatedUser: UserProfileType) => {
     const cleanedUser = {
       ...updatedUser,
@@ -203,6 +242,9 @@ export const App: React.FC = () => {
           <FeedView
             posts={posts}
             onLikePost={handleLikePost}
+            onDeletePost={handleDeletePost}
+            onEditCaption={handleEditCaption}
+            currentUserNickname={user.nickname}
             onGoToCamera={() => setActiveView('camera')}
           />
         )}
@@ -211,6 +253,8 @@ export const App: React.FC = () => {
           <UserProfile
             user={user}
             userPosts={userPosts}
+            onDeletePost={handleDeletePost}
+            onEditCaption={handleEditCaption}
             onOpenEditAuth={() => setShowAuthModal(true)}
             onGoToCamera={() => setActiveView('camera')}
           />

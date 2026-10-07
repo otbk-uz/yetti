@@ -184,7 +184,7 @@ export class SupabaseService {
     }
   }
 
-  // 4. Update post likes in Supabase DB
+  // 5. Update post likes in Supabase DB
   static async toggleLikePost(postId: string, newLikesCount: number): Promise<void> {
     try {
       await supabase
@@ -193,6 +193,32 @@ export class SupabaseService {
         .eq('id', postId);
     } catch (e) {
       console.log('Supabase like sync notice:', e);
+    }
+  }
+
+  // 6. Delete post from Supabase DB
+  static async deletePost(postId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('yetti_posts')
+        .delete()
+        .eq('id', postId);
+      return !error;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  // 7. Update post caption in Supabase DB
+  static async updatePostCaption(postId: string, newCaption: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('yetti_posts')
+        .update({ caption: newCaption })
+        .eq('id', postId);
+      return !error;
+    } catch (e) {
+      return true;
     }
   }
 }
