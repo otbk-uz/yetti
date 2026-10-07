@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Phone, User, AtSign, Zap, CheckCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { CloudflareService } from '../services/cloudflare';
 import type { UserProfile } from '../types';
 
 interface AuthModalProps {
   onComplete: (user: UserProfile) => void;
-  onClose: () => void;
   currentUser?: UserProfile;
 }
 
@@ -13,10 +13,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
   const [phone, setPhone] = useState(currentUser?.phone || '+998 ');
   const [nickname, setNickname] = useState(currentUser?.nickname || '');
   const [name, setName] = useState(currentUser?.name || '');
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phone.trim() || !nickname.trim() || !name.trim()) return;
+
+    setIsSyncing(true);
 
     const user: UserProfile = {
       phone,
@@ -26,7 +29,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
       isLoggedIn: true
     };
 
-    confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
+    // Register user to Cloudflare D1 Database
+    await CloudflareService.registerUser(user);
+
+    setIsSyncing(false);
+    confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 }, colors: ['#d4af37', '#f5e396'] });
     onComplete(user);
   };
 
@@ -34,8 +41,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(0, 0, 0, 0.85)',
-      backdropFilter: 'blur(16px)',
+      background: 'rgba(5, 5, 7, 0.92)',
+      backdropFilter: 'blur(20px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -44,39 +51,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
     }}>
       <form onSubmit={handleSubmit} className="fade-in" style={{
         width: '100%',
-        maxWidth: '380px',
-        background: '#111116',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        borderRadius: '24px',
-        padding: '1.75rem',
+        maxWidth: '390px',
+        background: '#0d0c12',
+        border: '1px solid rgba(212, 175, 55, 0.35)',
+        borderRadius: '28px',
+        padding: '1.85rem',
         display: 'flex',
         flexDirection: 'column',
         gap: '1.25rem',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.8)'
+        boxShadow: '0 20px 60px rgba(0,0,0,0.9), 0 0 30px rgba(212,175,55,0.15)'
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{
-            width: '54px',
-            height: '54px',
+            width: '56px',
+            height: '56px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #00f2fe, #ff007f)',
+            background: 'var(--gold-gradient)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 0.75rem'
+            margin: '0 auto 0.75rem',
+            boxShadow: '0 0 20px rgba(212,175,55,0.4)'
           }}>
-            <Zap size={28} color="#fff" />
+            <Zap size={28} color="#000" fill="#000" />
           </div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>YETTI ga Kirish</h2>
-          <p style={{ fontSize: '0.8rem', color: '#a1a1aa', marginTop: '4px' }}>
-            Telefon raqam, ism va nikingizni kiriting va darhol rasmlaringiz tavsiyalarga chiqsin!
+          <h2 className="text-gold-metallic" style={{ fontSize: '1.35rem', margin: 0 }}>
+            YETTI GOLD KIRISH
+          </h2>
+          <p style={{ fontSize: '0.8rem', color: '#a1a1aa', marginTop: '6px' }}>
+            Telefon raqam, ism va nik kiritib Cloudflare D1 ga ulaning va momental rasmlaringiz tavsiyalarga chiqsin!
           </p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           {/* Phone */}
           <div style={{ position: 'relative' }}>
-            <Phone size={18} color="#a1a1aa" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+            <Phone size={18} color="#d4af37" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
               placeholder="Telefon raqam (+998 ...)"
@@ -85,8 +95,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
               required
               style={{
                 width: '100%',
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(212,175,55,0.06)',
+                border: '1px solid rgba(212,175,55,0.25)',
                 color: '#fff',
                 borderRadius: '14px',
                 padding: '12px 14px 12px 42px',
@@ -98,7 +108,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
 
           {/* Name */}
           <div style={{ position: 'relative' }}>
-            <User size={18} color="#a1a1aa" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+            <User size={18} color="#d4af37" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
               placeholder="Ismingiz (masalan: Azizbek)"
@@ -107,8 +117,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
               required
               style={{
                 width: '100%',
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(212,175,55,0.06)',
+                border: '1px solid rgba(212,175,55,0.25)',
                 color: '#fff',
                 borderRadius: '14px',
                 padding: '12px 14px 12px 42px',
@@ -120,7 +130,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
 
           {/* Nickname */}
           <div style={{ position: 'relative' }}>
-            <AtSign size={18} color="#a1a1aa" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+            <AtSign size={18} color="#d4af37" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
               placeholder="Nikname (masalan: aziz_yetti)"
@@ -129,8 +139,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
               required
               style={{
                 width: '100%',
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid rgba(255,255,255,0.12)',
+                background: 'rgba(212,175,55,0.06)',
+                border: '1px solid rgba(212,175,55,0.25)',
                 color: '#fff',
                 borderRadius: '14px',
                 padding: '12px 14px 12px 42px',
@@ -144,23 +154,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
             type="submit"
+            disabled={isSyncing}
             style={{
               flex: 1,
-              background: 'linear-gradient(135deg, #00f2fe, #4facfe)',
+              background: 'var(--gold-gradient)',
               border: 'none',
               color: '#000',
-              fontWeight: 800,
+              fontWeight: 900,
               fontSize: '0.95rem',
-              padding: '12px',
+              padding: '13px',
               borderRadius: '14px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '6px'
+              gap: '6px',
+              boxShadow: '0 4px 20px rgba(212,175,55,0.35)'
             }}
           >
-            <CheckCircle size={18} /> Tasdiqlash
+            <CheckCircle size={18} /> {isSyncing ? 'Cloudflare D1 Synced...' : 'Tasdiqlash'}
           </button>
         </div>
       </form>

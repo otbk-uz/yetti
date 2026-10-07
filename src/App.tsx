@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Flame, User, Zap, UserCheck } from 'lucide-react';
+import { Camera, Flame, User, Zap, UserCheck, Cloud } from 'lucide-react';
 import { InstantCamera } from './components/InstantCamera';
 import { FeedView } from './components/FeedView';
 import { UserProfile } from './components/UserProfile';
 import { AuthModal } from './components/AuthModal';
+import { CloudflareService } from './services/cloudflare';
 import { INITIAL_USER, INITIAL_RECOMMENDATIONS } from './data/mockData';
 import type { MainView, MediaPost, UserProfile as UserProfileType } from './types';
 
@@ -13,7 +14,7 @@ export const App: React.FC = () => {
   const [posts, setPosts] = useState<MediaPost[]>(INITIAL_RECOMMENDATIONS);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
 
-  // Load persistent user profile from localStorage if present
+  // Load persistent user profile & Cloudflare D1 feed
   useEffect(() => {
     const savedUser = localStorage.getItem('yetti_user');
     if (savedUser) {
@@ -23,6 +24,13 @@ export const App: React.FC = () => {
         console.log(e);
       }
     }
+
+    // Attempt Cloudflare D1 feed fetch
+    CloudflareService.fetchRecommendationFeed().then(remotePosts => {
+      if (remotePosts && remotePosts.length > 0) {
+        setPosts(prev => [...remotePosts, ...prev]);
+      }
+    });
   }, []);
 
   const handlePublishPost = (newPost: MediaPost) => {
@@ -56,32 +64,39 @@ export const App: React.FC = () => {
       {/* Top Bar Header */}
       <header className="yetti-header">
         <div className="yetti-logo" onClick={() => setActiveView('camera')}>
-          <Zap size={22} color="#00f2fe" fill="#00f2fe" />
-          <span>YETTI</span>
+          <Zap size={22} color="#d4af37" fill="#d4af37" />
+          <span className="text-gold-metallic">YETTI</span>
           <span className="yetti-badge">MOMENTAL</span>
         </div>
 
-        {/* User login / profile trigger button */}
-        <button
-          onClick={() => setShowAuthModal(true)}
-          style={{
-            background: 'rgba(255,255,255,0.1)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            color: '#fff',
-            padding: '5px 12px',
-            borderRadius: '999px',
-            fontSize: '0.78rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}
-        >
-          <UserCheck size={14} color="#00f2fe" />
-          <span>@{user.nickname}</span>
-        </button>
+        {/* Cloudflare D1 & R2 indicator + User profile badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="cloudflare-badge" title="Cloudflare D1 Database & R2 Storage">
+            <Cloud size={12} color="#d4af37" />
+            <span>D1+R2</span>
+          </div>
+
+          <button
+            onClick={() => setShowAuthModal(true)}
+            style={{
+              background: 'rgba(212,175,55,0.12)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(212,175,55,0.3)',
+              color: '#f5e396',
+              padding: '5px 12px',
+              borderRadius: '999px',
+              fontSize: '0.78rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <UserCheck size={14} color="#d4af37" />
+            <span>@{user.nickname}</span>
+          </button>
+        </div>
       </header>
 
       {/* Viewport content */}
@@ -121,7 +136,7 @@ export const App: React.FC = () => {
           onClick={() => setActiveView('camera')}
         >
           <div className="tab-icon-wrapper">
-            <Camera size={22} color={activeView === 'camera' ? '#00f2fe' : '#a1a1aa'} />
+            <Camera size={22} color={activeView === 'camera' ? '#d4af37' : '#71717a'} />
           </div>
           <span>Momental Kamera</span>
         </button>
@@ -131,7 +146,7 @@ export const App: React.FC = () => {
           onClick={() => setActiveView('feed')}
         >
           <div className="tab-icon-wrapper">
-            <Flame size={22} color={activeView === 'feed' ? '#ff007f' : '#a1a1aa'} />
+            <Flame size={22} color={activeView === 'feed' ? '#d4af37' : '#71717a'} />
           </div>
           <span>Tavsiyalar</span>
         </button>
@@ -141,7 +156,7 @@ export const App: React.FC = () => {
           onClick={() => setActiveView('profile')}
         >
           <div className="tab-icon-wrapper">
-            <User size={22} color={activeView === 'profile' ? '#ffaa00' : '#a1a1aa'} />
+            <User size={22} color={activeView === 'profile' ? '#d4af37' : '#71717a'} />
           </div>
           <span>Profil</span>
         </button>
@@ -151,7 +166,6 @@ export const App: React.FC = () => {
       {showAuthModal && (
         <AuthModal
           onComplete={handleSaveUser}
-          onClose={() => setShowAuthModal(false)}
           currentUser={user}
         />
       )}
