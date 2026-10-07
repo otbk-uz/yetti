@@ -5,6 +5,7 @@ export interface UserProfile {
   nickname: string;
   phone: string;
   avatar: string;
+  password?: string;
   bio?: string;
   isLoggedIn: boolean;
   isRegistered?: boolean;

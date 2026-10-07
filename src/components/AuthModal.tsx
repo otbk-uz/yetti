@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Phone, User, AtSign, Zap, ArrowRight } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { User, AtSign, ArrowRight, Lock, Camera } from 'lucide-react';
 import { SupabaseService } from '../services/supabase';
 import type { UserProfile } from '../types';
 
@@ -9,26 +9,68 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser }) => {
-  const [phone, setPhone] = useState(currentUser?.phone || '+998 ');
-  const [nickname, setNickname] = useState(currentUser?.nickname || '');
-  const [name, setName] = useState(currentUser?.name || '');
+  const defaultAvatar = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%2307080a" stroke="%23ffffff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+
+  // Extract digits after +998 if existing
+  const initialDigits = (currentUser?.phone || '').replace('+998', '').trim();
+
+  const [phoneDigits, setPhoneDigits] = useState<string>(initialDigits);
+  const [nickname, setNickname] = useState<string>(currentUser?.nickname || '');
+  const [name, setName] = useState<string>(currentUser?.name || '');
+  const [password, setPassword] = useState<string>(currentUser?.password || '');
+  const [avatar, setAvatar] = useState<string>(currentUser?.avatar || defaultAvatar);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setAvatar(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
-    if (!phone.trim() || !nickname.trim() || !name.trim()) return;
+
+    const cleanDigits = phoneDigits.replace(/\D/g, '').trim();
+    if (!cleanDigits) {
+      setErrorMessage("⚠️ Telefon raqamingizni kiriting!");
+      return;
+    }
+
+    if (!name.trim()) {
+      setErrorMessage("⚠️ Ismingizni kiriting!");
+      return;
+    }
+
+    if (!nickname.trim()) {
+      setErrorMessage("⚠️ Nikneymingizni kiriting!");
+      return;
+    }
+
+    // Validate min 6 character password
+    if (!password || password.length < 6) {
+      setErrorMessage("⚠️ Parol kamida 6 ta belgidan iborat bo'lishi kerak!");
+      return;
+    }
 
     const cleanNick = nickname.replace(/^@/, '').toLowerCase().trim();
-    const cleanPhone = phone.trim();
+    const fullPhone = `+998 ${cleanDigits}`;
 
     setIsSyncing(true);
 
     // Verify unique nickname and phone number against database & local registry
     const { nicknameTaken, phoneTaken } = await SupabaseService.checkUserExists(
       cleanNick,
-      cleanPhone,
+      fullPhone,
       currentUser?.nickname
     );
 
@@ -40,17 +82,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
 
     if (phoneTaken) {
       setIsSyncing(false);
-      setErrorMessage(`⚠️ ${cleanPhone} telefon raqami allaqachon ro'yxatdan o'tgan!`);
+      setErrorMessage(`⚠️ ${fullPhone} telefon raqami allaqachon ro'yxatdan o'tgan!`);
       return;
     }
 
-    const defaultAvatar = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%2307080a" stroke="%23ffffff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-
     const user: UserProfile = {
-      phone: cleanPhone,
+      phone: fullPhone,
       nickname: cleanNick,
       name,
-      avatar: currentUser?.avatar && !currentUser.avatar.includes('unsplash') ? currentUser.avatar : defaultAvatar,
+      avatar,
+      password,
       isLoggedIn: true,
       isRegistered: true
     };
@@ -75,9 +116,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
       zIndex: 100,
       padding: '1.25rem'
     }}>
+      <input
+        type="file"
+        ref={avatarInputRef}
+        accept="image/*"
+        onChange={handleAvatarSelect}
+        style={{ display: 'none' }}
+      />
+
       <form onSubmit={handleSubmit} className="fade-in" style={{
         width: '100%',
-        maxWidth: '390px',
+        maxWidth: '400px',
         background: 'rgba(18, 20, 26, 0.92)',
         border: '1px solid rgba(255, 255, 255, 0.12)',
         borderRadius: '24px',
@@ -88,37 +137,77 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '52px',
-            height: '52px',
-            borderRadius: '16px',
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 0.85rem'
-          }}>
-            <Zap size={24} color="#ffffff" fill="#ffffff" />
+          {/* Avatar Upload Circle */}
+          <div style={{ position: 'relative', width: '72px', height: '72px', margin: '0 auto 0.85rem' }}>
+            <img
+              src={avatar}
+              alt="Avatar preview"
+              style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '2px solid rgba(255, 255, 255, 0.2)',
+                background: '#07080a'
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                background: '#ffffff',
+                color: '#000000',
+                border: 'none',
+                borderRadius: '50%',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.5)'
+              }}
+              title="Avatar rasmini tanlash"
+            >
+              <Camera size={13} />
+            </button>
           </div>
+
           <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.5px', margin: 0 }}>
             YETTIGA KIRISH
           </h2>
-          <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '6px', lineHeight: 1.4 }}>
-            Shaxsiy profilingizni yarating. Ma'lumotlaringiz xavfsiz biriktiriladi.
+          <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '4px', lineHeight: 1.4 }}>
+            Shaxsiy profilingizni yarating va parolingizni belgilang.
           </p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-          {/* Phone */}
-          <div style={{ position: 'relative' }}>
-            <Phone size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+          {/* Locked +998 Phone Input */}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <div style={{
+              position: 'absolute',
+              left: '12px',
+              color: '#ffffff',
+              fontSize: '0.9rem',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              paddingRight: '6px',
+              borderRight: '1px solid rgba(255,255,255,0.15)',
+              userSelect: 'none'
+            }}>
+              <span>+998</span>
+            </div>
             <input
               type="text"
-              placeholder="Telefon raqam (+998 ...)"
-              value={phone}
+              placeholder="90 123 45 67"
+              value={phoneDigits}
               onChange={(e) => {
-                setPhone(e.target.value);
+                setPhoneDigits(e.target.value);
                 setErrorMessage('');
               }}
               required
@@ -128,9 +217,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
                 border: '1px solid rgba(255, 255, 255, 0.12)',
                 color: '#fff',
                 borderRadius: '14px',
-                padding: '12px 14px 12px 42px',
+                padding: '12px 14px 12px 72px',
                 fontSize: '0.9rem',
-                outline: 'none'
+                outline: 'none',
+                fontWeight: 700
               }}
             />
           </div>
@@ -169,6 +259,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onComplete, currentUser })
               value={nickname}
               onChange={(e) => {
                 setNickname(e.target.value);
+                setErrorMessage('');
+              }}
+              required
+              style={{
+                width: '100%',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                color: '#fff',
+                borderRadius: '14px',
+                padding: '12px 14px 12px 42px',
+                fontSize: '0.9rem',
+                outline: 'none'
+              }}
+            />
+          </div>
+
+          {/* Password (Min 6 chars) */}
+          <div style={{ position: 'relative' }}>
+            <Lock size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              type="password"
+              placeholder="Parol (kamida 6 ta belgi)"
+              value={password}
+              minLength={6}
+              onChange={(e) => {
+                setPassword(e.target.value);
                 setErrorMessage('');
               }}
               required

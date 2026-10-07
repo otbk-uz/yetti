@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, MessageCircle, Share2, Zap, Volume2, VolumeX, Send, Search, Trash2, Edit3, Check, X } from 'lucide-react';
+import { PublicProfileModal } from './PublicProfileModal';
 import type { MediaPost } from '../types';
 
 interface FeedViewProps {
@@ -25,6 +26,7 @@ export const FeedView: React.FC<FeedViewProps> = ({
   const [editCaptionText, setEditCaptionText] = useState<string>('');
   const [commentInput, setCommentInput] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedAuthor, setSelectedAuthor] = useState<{ name: string; nickname: string; avatar: string } | null>(null);
   const [commentsMap, setCommentsMap] = useState<Record<string, string[]>>({});
 
   const handleAddComment = (postId: string) => {
@@ -196,19 +198,24 @@ export const FeedView: React.FC<FeedViewProps> = ({
                   )}
 
                   {/* Author Badge */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '12px',
-                    left: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.6rem',
-                    background: 'rgba(7, 8, 10, 0.75)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    padding: '4px 12px 4px 6px',
-                    borderRadius: '999px'
-                  }}>
+                  <div
+                    onClick={() => setSelectedAuthor({ name: post.authorName, nickname: post.authorNickname, avatar: post.authorAvatar })}
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      left: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.6rem',
+                      background: 'rgba(7, 8, 10, 0.75)',
+                      backdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      padding: '4px 12px 4px 6px',
+                      borderRadius: '999px',
+                      cursor: 'pointer'
+                    }}
+                    title={`${post.authorName} (@${post.authorNickname}) profilini ko'rish`}
+                  >
                     <img
                       src={post.authorAvatar || `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%2307080a" stroke="%23ffffff" stroke-width="2"><circle cx="12" cy="7" r="4"></circle></svg>`}
                       alt={post.authorName}
@@ -397,6 +404,17 @@ export const FeedView: React.FC<FeedViewProps> = ({
           })
         )}
       </div>
+
+      {/* Public Author Profile Modal */}
+      {selectedAuthor && (
+        <PublicProfileModal
+          authorName={selectedAuthor.name}
+          authorNickname={selectedAuthor.nickname}
+          authorAvatar={selectedAuthor.avatar}
+          authorPosts={posts.filter(p => normalize(p.authorNickname) === normalize(selectedAuthor.nickname))}
+          onClose={() => setSelectedAuthor(null)}
+        />
+      )}
     </div>
   );
 };
