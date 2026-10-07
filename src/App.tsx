@@ -1,116 +1,159 @@
 import React, { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
-import { Sidebar } from './components/Sidebar';
-import { AiAssistant } from './components/AiAssistant';
-import { AnalyticsModule } from './components/AnalyticsModule';
-import { TaskManager } from './components/TaskManager';
-import { CloudVault } from './components/CloudVault';
-import { CodeStudio } from './components/CodeStudio';
-import { CommunityHub } from './components/CommunityHub';
-import { SettingsModule } from './components/SettingsModule';
-import type { TabId, ThemeMode } from './types';
-import { CheckCircle2, X } from 'lucide-react';
+import { Camera, Flame, User, Zap, UserCheck } from 'lucide-react';
+import { InstantCamera } from './components/InstantCamera';
+import { FeedView } from './components/FeedView';
+import { UserProfile } from './components/UserProfile';
+import { AuthModal } from './components/AuthModal';
+import { INITIAL_USER, INITIAL_RECOMMENDATIONS } from './data/mockData';
+import type { MainView, MediaPost, UserProfile as UserProfileType } from './types';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabId>('ai');
-  const [theme, setTheme] = useState<ThemeMode>('purple');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<MainView>('camera'); // Camera First as requested!
+  const [user, setUser] = useState<UserProfileType>(INITIAL_USER);
+  const [posts, setPosts] = useState<MediaPost[]>(INITIAL_RECOMMENDATIONS);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
 
+  // Load persistent user profile from localStorage if present
   useEffect(() => {
-    document.body.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  // Keyboard navigation for 1-7 keys
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      const keyTabMap: Record<string, TabId> = {
-        '1': 'ai',
-        '2': 'analytics',
-        '3': 'tasks',
-        '4': 'vault',
-        '5': 'studio',
-        '6': 'community',
-        '7': 'settings'
-      };
-      if (keyTabMap[e.key]) {
-        setActiveTab(keyTabMap[e.key]);
-        triggerToast(`Modul ${e.key} tanlandi`);
+    const savedUser = localStorage.getItem('yetti_user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.log(e);
       }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    }
   }, []);
 
-  const triggerToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3500);
+  const handlePublishPost = (newPost: MediaPost) => {
+    setPosts(prev => [newPost, ...prev]);
   };
 
-  const renderActiveModule = () => {
-    switch (activeTab) {
-      case 'ai': return <AiAssistant />;
-      case 'analytics': return <AnalyticsModule />;
-      case 'tasks': return <TaskManager />;
-      case 'vault': return <CloudVault />;
-      case 'studio': return <CodeStudio />;
-      case 'community': return <CommunityHub />;
-      case 'settings': return <SettingsModule currentTheme={theme} onThemeChange={setTheme} onTriggerNotification={triggerToast} />;
-      default: return <AiAssistant />;
-    }
+  const handleLikePost = (postId: string) => {
+    setPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        const isLiked = !p.isLiked;
+        return {
+          ...p,
+          isLiked,
+          likes: isLiked ? p.likes + 1 : p.likes - 1
+        };
+      }
+      return p;
+    }));
   };
+
+  const handleSaveUser = (updatedUser: UserProfileType) => {
+    setUser(updatedUser);
+    localStorage.setItem('yetti_user', JSON.stringify(updatedUser));
+    setShowAuthModal(false);
+  };
+
+  const userPosts = posts.filter(p => p.authorNickname === user.nickname);
 
   return (
-    <div className="app-container">
-      {/* Background Animated Glow Mesh */}
-      <div className="app-bg-glow" />
-      <div className="app-grid-overlay" />
-
-      {/* Navigation Header */}
-      <Navbar
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
-        onTriggerAction={triggerToast}
-      />
-
-      {/* Main Workspace Body */}
-      <div className="main-layout">
-        <Sidebar activeTab={activeTab} onSelectTab={setActiveTab} />
-
-        <main className="main-content">
-          {renderActiveModule()}
-        </main>
-      </div>
-
-      {/* Floating Toast Notification */}
-      {toastMessage && (
-        <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          background: 'rgba(15, 23, 42, 0.95)',
-          border: '1px solid var(--accent-purple)',
-          color: '#fff',
-          padding: '12px 20px',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-          zIndex: 9999,
-          animation: 'fadeIn 0.2s ease-out'
-        }}>
-          <CheckCircle2 size={18} color="#10b981" />
-          <span style={{ fontSize: '0.88rem', fontWeight: 500 }}>{toastMessage}</span>
-          <button
-            onClick={() => setToastMessage(null)}
-            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', marginLeft: '8px' }}
-          >
-            <X size={14} />
-          </button>
+    <div className="yetti-app">
+      {/* Top Bar Header */}
+      <header className="yetti-header">
+        <div className="yetti-logo" onClick={() => setActiveView('camera')}>
+          <Zap size={22} color="#00f2fe" fill="#00f2fe" />
+          <span>YETTI</span>
+          <span className="yetti-badge">MOMENTAL</span>
         </div>
+
+        {/* User login / profile trigger button */}
+        <button
+          onClick={() => setShowAuthModal(true)}
+          style={{
+            background: 'rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            color: '#fff',
+            padding: '5px 12px',
+            borderRadius: '999px',
+            fontSize: '0.78rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}
+        >
+          <UserCheck size={14} color="#00f2fe" />
+          <span>@{user.nickname}</span>
+        </button>
+      </header>
+
+      {/* Viewport content */}
+      <main style={{ flex: 1, position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+        {activeView === 'camera' && (
+          <InstantCamera
+            onPublishPost={handlePublishPost}
+            onGoToFeed={() => setActiveView('feed')}
+            authorName={user.name}
+            authorNickname={user.nickname}
+            authorAvatar={user.avatar}
+          />
+        )}
+
+        {activeView === 'feed' && (
+          <FeedView
+            posts={posts}
+            onLikePost={handleLikePost}
+            onGoToCamera={() => setActiveView('camera')}
+          />
+        )}
+
+        {activeView === 'profile' && (
+          <UserProfile
+            user={user}
+            userPosts={userPosts}
+            onOpenEditAuth={() => setShowAuthModal(true)}
+            onGoToCamera={() => setActiveView('camera')}
+          />
+        )}
+      </main>
+
+      {/* Floating Bottom Navigation Tabbar */}
+      <nav className="yetti-tabbar">
+        <button
+          className={`tab-item ${activeView === 'camera' ? 'active' : ''}`}
+          onClick={() => setActiveView('camera')}
+        >
+          <div className="tab-icon-wrapper">
+            <Camera size={22} color={activeView === 'camera' ? '#00f2fe' : '#a1a1aa'} />
+          </div>
+          <span>Momental Kamera</span>
+        </button>
+
+        <button
+          className={`tab-item ${activeView === 'feed' ? 'active' : ''}`}
+          onClick={() => setActiveView('feed')}
+        >
+          <div className="tab-icon-wrapper">
+            <Flame size={22} color={activeView === 'feed' ? '#ff007f' : '#a1a1aa'} />
+          </div>
+          <span>Tavsiyalar</span>
+        </button>
+
+        <button
+          className={`tab-item ${activeView === 'profile' ? 'active' : ''}`}
+          onClick={() => setActiveView('profile')}
+        >
+          <div className="tab-icon-wrapper">
+            <User size={22} color={activeView === 'profile' ? '#ffaa00' : '#a1a1aa'} />
+          </div>
+          <span>Profil</span>
+        </button>
+      </nav>
+
+      {/* Auth Modal Registration */}
+      {showAuthModal && (
+        <AuthModal
+          onComplete={handleSaveUser}
+          onClose={() => setShowAuthModal(false)}
+          currentUser={user}
+        />
       )}
     </div>
   );
